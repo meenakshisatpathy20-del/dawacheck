@@ -15,14 +15,18 @@ Choose **C** or **B** if you want every item exactly as in the playbook's stack 
 
 ---
 
-## A. Everything on Vercel (multi-service project)
-`vercel.json` defines two services, exactly as Vercel detects the repo: **backend** (`backend/`, FastAPI, served at `/api`) and **frontend** (`frontend/`, Vite, served at `/`).
-1. Import the repository in Vercel and choose the **multi-service / Services** option (not "Import single project"). Vercel reads `vercel.json`; if the import page still says a `vercel.json` is needed, press its refresh button so it re-reads the branch.
-2. Storage → add a **Postgres** database (Neon) to the project. It sets `DATABASE_URL` / `POSTGRES_URL`; the backend converts the URL for psycopg 3 and seeds itself on first start. Without a database the backend uses SQLite in `/tmp`, which is wiped between instances (fine for a quick look, not for a demo).
-3. Environment Variables: `ANTHROPIC_API_KEY` (photo reading and "Why?"), `ADMIN_TOKEN`, `USER_HASH_SALT`. Optional: `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`.
-4. Deploy. Open `https://<project>.vercel.app/`. API: `/api/health`, docs at `/api/docs`. Screens use `/#/...` links (e.g. `/#/officer`) so any page can be reloaded.
+## A. Everything on Vercel (one project)
+`vercel.json` builds the React app (`frontend/`) into static files at `/`, and runs the complete FastAPI backend (`backend/app`, every endpoint) as one Python function, `api/index.py`, at `/api/...`.
+1. Vercel → **Add New → Project** → import `dawacheck`. On the import page choose **Import single project** for the repository root (Root Directory `./`), **not** the `backend` / `frontend` entries and **not** Services. Framework Preset: **Other** (the build settings come from `vercel.json`).
+2. Environment Variables: `ADMIN_TOKEN`, `USER_HASH_SALT`, and optionally `ANTHROPIC_API_KEY`. Deploy.
+3. Storage → **Create Database → Neon (Postgres)** → connect to the project, then **Redeploy**. The backend creates its tables and loads the demo data on first start.
+4. Open `https://<project>.vercel.app/` (app), `/#/officer` (dashboard), `/api/health`, `/api/docs`.
 
-How it fits together: the frontend build detects Vercel (`VERCEL=1`) and builds for `/` with the API at `/api`; the backend answers on both `/api/x` and `/x`, so it works whether Vercel forwards or strips the `/api` prefix. The backend service installs only `backend/requirements.txt` (slim, under the serverless size limit); on Vercel label and bill photos are read by the vision model, OCR jobs run inside the request, and small image crops are returned inline. Requests are capped at 4.5 MB (the app shrinks photos before upload).
+On Vercel:
+- **Photo reading:** with `ANTHROPIC_API_KEY`, the vision model reads label and bill photos on the server; without it, the phone reads them itself (Tesseract compiled to WebAssembly, files served from `/ocr/`, cached for offline).
+- **Queue:** OCR jobs run inside the request (Vercel has no background workers). The Redis + RQ worker runs in options B and C.
+- **Photos:** kept in any S3-compatible bucket when `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (and `S3_REGION`, `auto` for Cloudflare R2) are set; the backend serves them at `/api/uploads/...`, so the bucket stays private. Without a bucket, only the small field crops are kept (inline).
+- Requests are capped at 4.5 MB; the app shrinks photos before upload.
 
 ## B. Frontend on Vercel, full backend on Render
 1. Render → New → **Blueprint** → this repo. `render.yaml` creates the API (Docker image with Tesseract), the OCR worker, Redis and PostgreSQL. Set `ADMIN_TOKEN` and `ANTHROPIC_API_KEY` when asked. In the database shell run `CREATE EXTENSION postgis;` if the app's automatic attempt was not allowed.
@@ -42,4 +46,4 @@ Put HTTPS in front (Caddy or Nginx): phones only open the camera on HTTPS pages.
 Load the real CIB&RC data (`python -m pipeline.run --download --load`), check demo products against the PDF pages, replace the fictional catalogue, and have the translations reviewed. Until then the app shows a "sample data" notice.
 
 ## Verified in the build environment
-The full test suite (106 tests) on SQLite and on PostgreSQL + PostGIS. A local stand-in for the Vercel services layout (frontend build at `/`, backend at `/api`, serverless mode, only the slim `backend/requirements.txt` installed) was driven in Chromium: scan → confirm → verdict, reloads, SOS, officer map, `/api/docs`, with every API call going to `/api/...` and no errors. **Not run:** an actual Vercel or Render deploy, and `docker compose up`, since this environment has no Docker daemon and cannot reach vercel.com or render.com. The first real deploy is the final check.
+The full test suite on SQLite and on PostgreSQL + PostGIS. A local stand-in for the Vercel project (frontend build at `/`, `api/index.py` behind the `/api/:path*` rewrite, serverless mode, only the root `requirements.txt` installed) was driven in Chromium in both ways Vercel can hand the request to the function: scanning a label photo read on the phone, verdict, officer map, `/api/docs`, with no errors. **Not run:** an actual Vercel or Render deploy, and `docker compose up` (no access from the build environment).

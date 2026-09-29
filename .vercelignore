@@ -1,0 +1,8 @@
+# Not needed by the Vercel deployment (keeps uploads small)
+docs/deck/node_modules
+docs/deck/screens
+frontend/node_modules
+backend/tests
+**/__pycache__
+data/raw
+data/interim

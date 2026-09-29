@@ -50,6 +50,16 @@ async function shrinkAll(params) {
   return out;
 }
 
+// The server had no text reader (no OCR engine, no vision model): read the photo on the phone
+// and send the text instead. The rules engine still decides the verdict on the server.
+async function withDeviceOcr(result, params, resend, imageKey = "image") {
+  if (!(result && result.status === "need_input" && result.reason === "ocr_unavailable" && params[imageKey])) return result;
+  const { readOnDevice } = await import("./ocr.js");
+  const text = await readOnDevice(params[imageKey]);
+  if (!text) return result;
+  return resend({ ...params, ocr_text: text });
+}
+
 const scanKey = (p) => ["scan", p.product_id, p.crop, p.pest, p.state, p.area_acre, p.lang].join("|");
 
 export const api = {
@@ -72,12 +82,13 @@ export const api = {
   },
   // Label photos go through the OCR queue (Redis worker in production); poll until done.
   async scanPhoto(params, onQueued) {
-    const job = await request("/scan/async", { method: "POST", body: form(await shrinkAll(params)) });
-    if (job.status === "done") return job.result; // serverless: the job already ran in the request
+    const small = await shrinkAll(params);
+    const job = await request("/scan/async", { method: "POST", body: form(small) });
+    if (job.status === "done") return withDeviceOcr(job.result, small, (p) => api.scan(p)); // serverless: ran in-request
     onQueued && onQueued(job);
     for (let i = 0; i < 120; i++) {
       const st = await request(`/jobs/${encodeURIComponent(job.job_id)}`);
-      if (st.status === "done") return st.result;
+      if (st.status === "done") return withDeviceOcr(st.result, small, (p) => api.scan(p));
       if (st.status === "failed") throw new Error(st.error || "OCR failed");
       await new Promise((r) => setTimeout(r, 700));
     }
@@ -85,7 +96,11 @@ export const api = {
   },
   submitProduct: async (params) => request("/products/submit", { method: "POST", body: form(await shrinkAll(params)) }),
   reminderUrl: (plot) => `${BASE}/reminder.ics?plot_id=${encodeURIComponent(plot)}`,
-  bill: async (params) => request("/bill", { method: "POST", body: form(await shrinkAll(params)) }),
+  bill: async (params) => {
+    const small = await shrinkAll(params);
+    const r = await request("/bill", { method: "POST", body: form(small) });
+    return withDeviceOcr(r, small, (p) => request("/bill", { method: "POST", body: form(p) }), "image");
+  },
   mix: (product_ids, lang) => request("/mix-check", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product_ids, lang }),
   }),

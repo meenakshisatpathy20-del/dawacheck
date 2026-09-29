@@ -13,3 +13,4 @@ data/interim/
 .DS_Store
 docs/deck/node_modules/
 frontend/dist-vercel/
+frontend/public/ocr/

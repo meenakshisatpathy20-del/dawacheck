@@ -79,3 +79,37 @@ def test_backend_entry_point_for_vercel():
     import main  # backend/main.py, the file Vercel's FastAPI service looks for
     from app.main import app
     assert main.app is app
+
+
+def test_photos_served_by_backend_from_disk_and_bucket(client, monkeypatch):
+    from app.services import storage
+
+    # Local disk
+    s = client.post("/report", data={"reason": "photo test"}, files={"photo": ("r.jpg", jpeg(), "image/jpeg")}).json()
+    assert s["status"] == "ok"
+    digest, url = storage.save_image(jpeg(), "report")
+    assert url == f"/uploads/report/{digest}.jpg"
+    r = client.get(url)
+    assert r.status_code == 200 and r.headers["content-type"] == "image/jpeg"
+    assert client.get("/api" + url).status_code == 200  # through the Vercel /api prefix too
+
+    # S3-compatible bucket (a fake client stands in for R2 / S3 / MinIO)
+    bucket = {}
+
+    class FakeS3:
+        def put_object(self, Bucket, Key, Body, ContentType):
+            bucket[Key] = Body
+
+        def get_object(self, Bucket, Key):
+            return {"Body": io.BytesIO(bucket[Key])}
+
+    monkeypatch.setattr(config, "S3_ENDPOINT", "https://example.r2.cloudflarestorage.com")
+    monkeypatch.setattr(storage, "_s3", lambda: FakeS3())
+    img = jpeg() + b"bucket"
+    digest, url = storage.save_image(img, "pack")
+    assert url.startswith("/uploads/pack/") and f"pack/{digest}.jpg" in bucket
+    assert client.get(url).content == img
+
+    # Invalid names never touch the disk or bucket
+    assert client.get("/uploads/pack/..%2F..%2Fetc%2Fpasswd").status_code == 404
+    assert client.get("/uploads/secret/" + "a" * 64 + ".jpg").status_code == 404

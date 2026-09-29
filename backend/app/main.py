@@ -343,8 +343,14 @@ def post_explain(req: schemas.ExplainRequest, db: Session = Depends(get_db)):
     return {**explain_mod.explain(req.fired, _lang(req.lang), rows), "source_rows": rows}
 
 
-config.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=config.UPLOAD_DIR), name="uploads")
+@app.get("/uploads/{kind}/{name}", include_in_schema=False)
+def get_upload(kind: str, name: str):
+    """Stored photos, from the bucket or local disk (the bucket itself can stay private)."""
+    data = storage.read_image(kind, name)
+    if data is None:
+        raise HTTPException(404, "not found")
+    media = extract._media_type(data) or "application/octet-stream"
+    return Response(data, media_type=media, headers={"Cache-Control": "private, max-age=86400"})
 
 _DIST = Path(config.ROOT / "frontend" / "dist")
 if _DIST.exists():

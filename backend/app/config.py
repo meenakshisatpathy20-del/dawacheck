@@ -31,6 +31,7 @@ S3_ENDPOINT = os.getenv("S3_ENDPOINT", "")
 S3_BUCKET = os.getenv("S3_BUCKET", "dawacheck")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "")
+S3_REGION = os.getenv("S3_REGION", "auto")  # "auto" for Cloudflare R2; e.g. "ap-south-1" for AWS
 
 # LLM used ONLY for turning OCR text into JSON and for plain-language rephrasing.
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-opus-5-5")
