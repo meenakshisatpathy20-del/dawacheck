@@ -1,7 +1,7 @@
 """Parsers for the CIB&RC registered-products list and the banned / restricted list.
 
 Both are PDF tables whose column names vary between editions, so columns are
-found by keyword. Outputs go to data/seed/ and are picked up by app.seed:
+found by keyword. Outputs go to backend/data/seed/ and are picked up by app.seed:
   registered_formulations.json  -> formulations.registered = True (+ products when a brand column exists)
   banned_list.json              -> active_ingredients.banned / restricted (rule R2)
 """

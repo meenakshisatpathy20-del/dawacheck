@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from app import normalise  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-FLAGS = ROOT / "data" / "seed" / "export_flags.json"
+FLAGS = ROOT / "backend" / "data" / "seed" / "export_flags.json"
 PRODUCTS = {"rice": "rice", "tomatoes": "tomato", "tomato": "tomato", "cotton seeds": "cotton", "cotton": "cotton",
             "okra": "okra", "okra/lady's fingers": "okra"}
 LOQ = 0.01
@@ -66,6 +66,6 @@ def merge(new: list[dict], flags_path: Path = FLAGS) -> dict:
 
 
 if __name__ == "__main__":
-    ai_file = ROOT / "data" / "seed" / "active_ingredients.json"
+    ai_file = ROOT / "backend" / "data" / "seed" / "active_ingredients.json"
     known = {i["name"] for i in json.loads(ai_file.read_text())["items"]}
     print(merge(parse(Path(sys.argv[1]), known)))

@@ -1,7 +1,7 @@
 """Name normalisation shared by the pipeline, the API and the rules engine.
 
 Spelling variants ("Paddy" -> "rice", "Bhindi" -> "okra", "kapas" -> "cotton",
-"sundi" -> "bollworm") come from data/seed/synonyms.json so they can be edited
+"sundi" -> "bollworm") come from backend/data/seed/synonyms.json so they can be edited
 without touching code.
 """
 from __future__ import annotations

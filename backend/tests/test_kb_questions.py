@@ -6,7 +6,7 @@ import pytest
 
 from app.services import catalogue
 
-QUESTIONS = json.loads((Path(__file__).resolve().parents[2] / "data" / "kb_questions.json").read_text())["questions"]
+QUESTIONS = json.loads((Path(__file__).resolve().parents[1] / "data" / "kb_questions.json").read_text())["questions"]
 
 
 def test_there_are_thirty_questions():

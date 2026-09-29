@@ -11,7 +11,7 @@ export function Shell({ children, title, back = true }) {
     <div className="phone">
       <div className="topbar">
         {back ? <button className="btn secondary" onClick={() => (window.history.length > 1 ? nav(-1) : nav("/"))} aria-label={t(lang, "back")}>←</button>
-          : <Link to="/" className="brand"><img src="/app/icon.svg" alt="" />DawaCheck</Link>}
+          : <Link to="/" className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck</Link>}
         {title && <strong style={{ fontSize: "1.1rem" }}>{title}</strong>}
         <select className="lang" value={lang} onChange={(e) => set({ lang: e.target.value })} aria-label="Language">
           {Object.entries(LANGS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -89,7 +89,7 @@ export function Loading({ text }) {
 // Crop / pest picture: real photo from public/img when present, emoji otherwise.
 export function Pic({ kind, name, emoji }) {
   const [ok, setOk] = useState(true);
-  const src = `/app/img/${kind}/${encodeURIComponent(name.replace(/ /g, "-"))}.jpg`;
+  const src = `${import.meta.env.BASE_URL}img/${kind}/${encodeURIComponent(name.replace(/ /g, "-"))}.jpg`;
   return ok ? <img src={src} alt="" onError={() => setOk(false)} /> : <span className="ico">{emoji}</span>;
 }
 

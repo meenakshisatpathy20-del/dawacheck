@@ -1,4 +1,4 @@
-"""Load data/seed/*.json into the database.  `python -m app.seed [--reset]`
+"""Load backend/data/seed/*.json into the database.  `python -m app.seed [--reset]`
 
 Parsed CIB&RC data from pipeline/ is loaded the same way: pipeline/load.py
 writes label_claims.json in this format and calls load_all().

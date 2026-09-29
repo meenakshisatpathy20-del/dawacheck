@@ -27,9 +27,34 @@ async def lifespan(app: FastAPI):
     yield
 
 
+class ApiPrefix:
+    """Serve every route both at /scan and at /api/scan.
+
+    On Vercel the backend service is mounted under /api and the frontend calls /api/...;
+    whether the platform forwards the prefix or strips it, the request reaches the same route.
+    """
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] in ("http", "websocket"):
+            path = scope.get("path", "")
+            if path == "/api" or path.startswith("/api/"):
+                new = path[4:] or "/"
+                scope = {**scope, "path": new, "raw_path": new.encode(), "root_path": "/api"}  # links (e.g. /docs) keep the prefix
+        await self.inner(scope, receive, send)
+
+
 app = FastAPI(title="DawaCheck API", version="0.1.0", lifespan=lifespan,
               description="AI reads, rules decide: every verdict comes from the rules engine and cites its source.")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(ApiPrefix)
+
+if config.SERVERLESS:
+    # Serverless platforms may not run ASGI lifespan events: prepare the database on cold start.
+    seed.ensure_seeded()
+    geo.init()
 app.include_router(admin.router)
 app.include_router(admin.public)
 

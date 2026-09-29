@@ -33,7 +33,7 @@ def _img(lines: list[str], blur: float, angle: float) -> Image.Image:
 
 def main(out: Path) -> None:
     random.seed(7)
-    catalogue = json.loads((ROOT / "data" / "seed" / "products.json").read_text())["items"]
+    catalogue = json.loads((ROOT / "backend" / "data" / "seed" / "products.json").read_text())["items"]
     packs = out / "packs"
     bills = out / "bills"
     packs.mkdir(parents=True, exist_ok=True)

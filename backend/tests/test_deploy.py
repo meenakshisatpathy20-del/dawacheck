@@ -64,13 +64,18 @@ def test_no_engine_and_no_llm_asks_for_other_input(client, monkeypatch):
     assert r["status"] == "need_input"
 
 
-def test_vercel_entry_restores_rewritten_path():
-    root = Path(__file__).resolve().parents[2]
-    sys.path.insert(0, str(root / "api"))
-    import index  # the Vercel function
-    from fastapi.testclient import TestClient
-    c = TestClient(index.app)
-    assert c.get("/api/index", params={"__path": "health"}).json()["status"] == "ok"
-    assert c.get("/health", params={"__path": "health"}).json()["status"] == "ok"
-    d = c.get("/api/index", params={"__path": "radar/batch", "batch": "PF24-117"}).json()
+def test_api_prefix_serves_every_route(client):
+    """Vercel mounts the backend service under /api; both /api/x and /x must reach the same route."""
+    assert client.get("/api/health").json()["status"] == "ok"
+    assert client.get("/health").json()["status"] == "ok"
+    d = client.get("/api/radar/batch", params={"batch": "PF24-117"}).json()
     assert d["batch"] == "PF24-117"
+    r = client.post("/api/scan", data={"qr_payload": "DC-QR-1012|EM25-777|0001", "crop": "cotton", "pest": "bollworm"}).json()
+    assert r["verdict"] == "green"
+    assert client.get("/api/docs").status_code == 200 and client.get("/api/openapi.json").status_code == 200
+
+
+def test_backend_entry_point_for_vercel():
+    import main  # backend/main.py, the file Vercel's FastAPI service looks for
+    from app.main import app
+    assert main.app is app

@@ -14,7 +14,7 @@ export default function Passport() {
   const risk = p.residue_risk === "high" ? "red" : p.residue_risk === "medium" ? "yellow" : "green";
   return (
     <div className="phone" style={{ maxWidth: 640 }}>
-      <div className="topbar"><span className="brand"><img src="/app/icon.svg" alt="" />DawaCheck · MRL Passport</span></div>
+      <div className="topbar"><span className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck · MRL Passport</span></div>
       <div className={`verdict v-${risk}`}>
         <div className="ico">{p.safe_now ? "✅" : "⏳"}</div>
         <h1>Safe to harvest from {p.safe_harvest_date || "—"}</h1>

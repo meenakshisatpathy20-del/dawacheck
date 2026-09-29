@@ -12,10 +12,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgl1 tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /srv
-COPY backend/requirements.txt backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt pytesseract
+COPY backend/requirements.txt backend/requirements-full.txt backend/
+RUN pip install --no-cache-dir -r backend/requirements-full.txt
 COPY backend/ backend/
-COPY data/ data/
 COPY pipeline/ pipeline/
 COPY --from=web /web/dist frontend/dist
 WORKDIR /srv/backend

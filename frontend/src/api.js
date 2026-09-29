@@ -1,6 +1,9 @@
 // API client with an offline cache of verdicts for products already scanned
 // (playbook: "works offline for scans already cached").
-const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+// Set at build time in vite.config.js ("/api" on Vercel, "" when the backend serves the app).
+const BASE = __API_BASE__;
+// Full link to a screen of this app (the MRL Passport QR code points here).
+export const appUrl = (path) => `${window.location.origin}${import.meta.env.BASE_URL}${__HASH_ROUTER__ ? "#" : ""}${path.replace(/^\//, "")}`;
 // Photos stored by the backend ("/uploads/...") live on the backend's host when it is separate.
 export const fileUrl = (u) => (u && u.startsWith("/uploads") ? BASE + u : u);
 const CACHE_KEY = "dc.cache.v1";

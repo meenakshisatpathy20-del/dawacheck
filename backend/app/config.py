@@ -19,7 +19,8 @@ def _db_url(url: str) -> str:
 
 
 DATABASE_URL = _db_url(os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or f"sqlite:///{_WRITABLE / 'dawacheck.db'}")
-SEED_DIR = Path(os.getenv("SEED_DIR", ROOT / "data" / "seed"))
+BACKEND = Path(__file__).resolve().parents[1]  # backend/ (self-contained: deployable on its own)
+SEED_DIR = Path(os.getenv("SEED_DIR", BACKEND / "data" / "seed"))
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _WRITABLE / "uploads"))
 # Serverless instances do not share /tmp, so small images (field crops) are returned inline as data URLs.
 INLINE_IMAGES = os.getenv("INLINE_IMAGES", "1" if SERVERLESS else "0") == "1"

@@ -4,7 +4,7 @@
   2 extract    data/interim/<pdf>.csv                 (pdfplumber, camelot fallback)
   3-5 parse    Major Uses: carry headings/crops down, split pests, parse ranges, validate
                Registered products and banned list: keyword-matched columns
-  6 write      data/seed/label_claims.json, registered_formulations.json, banned_list.json
+  6 write      backend/data/seed/label_claims.json, registered_formulations.json, banned_list.json
                (+ data/interim/review.csv)
   6b load      backend DB reseeded; then run the 30-question test
 EU MRLs are imported separately: python -m pipeline.import_eu_mrl export.csv
@@ -20,12 +20,12 @@ from . import download as dl
 from . import extract_tables, parse_major_uses, parse_registry
 
 ROOT = Path(__file__).resolve().parents[1]
-SEED_DIR = ROOT / "data" / "seed"
+SEED_DIR = ROOT / "backend" / "data" / "seed"
 
 
 def _write(name: str, note: str, items: list[dict]) -> None:
     (SEED_DIR / name).write_text(json.dumps({"_note": note, "items": items}, indent=1, ensure_ascii=False))
-    print(f"wrote {len(items)} rows -> data/seed/{name}")
+    print(f"wrote {len(items)} rows -> backend/data/seed/{name}")
 
 
 def run(do_download: bool = False, do_load: bool = False, raw_dir: Path = dl.RAW) -> dict:
@@ -68,7 +68,7 @@ def run(do_download: bool = False, do_load: bool = False, raw_dir: Path = dl.RAW
             "_note": "Parsed from CIB&RC Major Uses PDFs by pipeline/run.py. verified=false until each row used in "
                      "the demo is checked by hand against its page.",
             "source_file": None, "items": claims}, indent=1, ensure_ascii=False))
-        print(f"wrote {len(claims)} rows -> data/seed/label_claims.json; {len(review)} rows need review")
+        print(f"wrote {len(claims)} rows -> backend/data/seed/label_claims.json; {len(review)} rows need review")
     if registered:
         _write("registered_formulations.json", "Parsed from the CIB&RC registered-products list.", registered)
     if banned:

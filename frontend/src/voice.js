@@ -19,7 +19,7 @@ export function speak(text, locale = "en-IN") {
 let clipAudio = null;
 export function playClip(lang, key) {
   return new Promise((resolve) => {
-    const a = new Audio(`/app/audio/${lang}/${key}.mp3`);
+    const a = new Audio(`${import.meta.env.BASE_URL}audio/${lang}/${key}.mp3`);
     clipAudio = a;
     a.onended = () => resolve(true);
     a.onerror = () => resolve(false);

@@ -18,7 +18,7 @@ export default function Home() {
     for (const r of d) {
       const msg = `${t(lang, "harvestToday")}: ${CROP_NAME[lang][r.crop] || r.crop} (${r.plot})`;
       if ("Notification" in window && Notification.permission === "granted") {
-        try { new Notification("DawaCheck", { body: msg, icon: "/app/icon.svg" }); } catch { /* ignore */ }
+        try { new Notification("DawaCheck", { body: msg, icon: `${import.meta.env.BASE_URL}icon.svg` }); } catch { /* ignore */ }
       }
       speak(msg);
     }

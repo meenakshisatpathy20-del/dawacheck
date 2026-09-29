@@ -269,7 +269,7 @@ export default function Officer() {
   return (
     <div className="dash">
       <div className="row">
-        <Link to="/" className="brand"><img src="/app/icon.svg" alt="" />DawaCheck</Link>
+        <Link to="/" className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck</Link>
         <span className="muted">Officer / FPO dashboard · Fake-Batch Radar</span>
       </div>
       <nav className="tabs">

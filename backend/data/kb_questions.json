@@ -1,5 +1,5 @@
 {
-  "_note": "30 hand-checked questions (playbook section 8, step 9). Answers currently match the SAMPLE label_claims.json. When the parsed CIB&RC data replaces it, rewrite each answer from the PDF page (fill 'page') and re-run: pytest tests/test_kb_questions.py",
+  "_note": "30 hand-checked questions (playbook section 8, step 9). Answers currently match the SAMPLE label_claims.json. When the parsed CIB&RC data replaces it, rewrite each answer from the PDF page (fill 'page') and re-run: cd backend && pytest tests/test_kb_questions.py",
   "questions": [
     {"q": "Is imidacloprid 17.8 SL approved on cotton for jassids? Dose? PHI?", "ai": "imidacloprid", "pct": 17.8, "type": "SL", "crop": "cotton", "pest": "jassid", "approved": true, "form_ha": [100, 125], "phi": 40},
     {"q": "Imidacloprid 17.8 SL on cotton for whitefly?", "ai": "imidacloprid", "pct": 17.8, "type": "SL", "crop": "cotton", "pest": "whitefly", "approved": true, "form_ha": [100, 125], "phi": 40},

@@ -1,36 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "installCommand": "cd frontend && npm ci",
-  "buildCommand": "cd frontend && npx vite build --outDir dist-vercel/app --emptyOutDir",
-  "outputDirectory": "frontend/dist-vercel",
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 60,
-      "includeFiles": "{backend/app/**,data/seed/**,data/kb_questions.json}",
-      "excludeFiles": "{frontend/**,docs/**,backend/tests/**,pipeline/**,scripts/**}"
-    }
-  },
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/app/",
-      "permanent": false
+  "services": {
+    "backend": {
+      "root": "backend",
+      "framework": "fastapi"
     },
-    {
-      "source": "/app",
-      "destination": "/app/",
-      "permanent": false
+    "frontend": {
+      "root": "frontend",
+      "framework": "vite"
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/app/:path*",
-      "destination": "/app/index.html"
-    },
-    {
-      "source": "/:path*",
-      "destination": "/api/index?__path=:path*"
-    }
-  ]
+  }
 }

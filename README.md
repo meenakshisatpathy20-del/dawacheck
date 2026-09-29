@@ -10,8 +10,8 @@ DawaCheck is a voice-first app that checks a pesticide at the moment of purchase
 
 | What | Status |
 |---|---|
-| Label claims (crop × pest × dose × waiting period) in `data/seed/label_claims.json` | **SAMPLE DATA.** Not yet parsed from the CIB&RC *Major Uses* PDFs (ppqs.gov.in was blocked from the build environment). Marked `verified: false` and shown in the app as sample data. Run `pipeline/` to replace them. |
-| Product catalogue (`data/seed/products.json`, 50 products) | **Fictional brands, companies and registration numbers**, so no real company is misrepresented. Replace with the parsed registered-products list and labels you photograph. |
+| Label claims (crop × pest × dose × waiting period) in `backend/data/seed/label_claims.json` | **SAMPLE DATA.** Not yet parsed from the CIB&RC *Major Uses* PDFs (ppqs.gov.in was blocked from the build environment). Marked `verified: false` and shown in the app as sample data. Run `pipeline/` to replace them. |
+| Product catalogue (`backend/data/seed/products.json`, 50 products) | **Fictional brands, companies and registration numbers**, so no real company is misrepresented. Replace with the parsed registered-products list and labels you photograph. |
 | Banned / restricted flags, IRAC/FRAC/HRAC groups (84 chemicals), toxicity colours | Hand-made enrichment table. Re-check bans against the current CIB&RC list; copy toxicity colours from each real label. |
 | Facts on slides | From the sources linked in the playbook, with exact URLs in [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md). Re-open each before quoting it. |
 | Hindi, Marathi, Punjabi, Telugu text | Drafts. Review with native speakers. |
@@ -33,7 +33,7 @@ Open **http://localhost:8000/app/** (farmer app), **/app/officer** (dashboard), 
 ### Without Docker (laptop demo, SQLite)
 ```bash
 sudo apt-get install tesseract-ocr        # optional OCR engine for label photos
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-full.txt
 cd frontend && npm install && npm run build && cd ..
 cd backend && python -m app.seed --reset && ADMIN_TOKEN=change-me uvicorn app.main:app --port 8000
 ```
@@ -42,7 +42,7 @@ On stage with unreliable Wi-Fi set `DAWACHECK_OFFLINE=1`: no external calls; the
 
 ### Tests
 ```bash
-cd backend && python -m pytest -q                      # 105 tests
+cd backend && python -m pytest -q                      # 106 tests
 TEST_DATABASE_URL=postgresql+psycopg://user@host/db python -m pytest -q   # same suite on PostgreSQL + PostGIS
 ```
 Covers every rule, every endpoint, dose maths, extraction, a real Tesseract photo-OCR run, the PDF parsers, the admin flows, the job queue, the impact metrics and the 30 knowledge-base questions.
@@ -106,7 +106,7 @@ python -m pipeline.run --download --load        # URLs in pipeline/sources.json 
 python -m pipeline.import_eu_mrl eu-export.csv  # optional EU MRL flags
 cd backend && python -m pytest tests/test_kb_questions.py
 ```
-Review `data/interim/review.csv`, then rewrite `data/kb_questions.json` answers from the PDF pages.
+Review `data/interim/review.csv`, then rewrite `backend/data/kb_questions.json` answers from the PDF pages.
 
 ## Honest limits
 - Tank-mix checks cover duplicates, resistance group and toxicity only; no prediction of chemical reactions.

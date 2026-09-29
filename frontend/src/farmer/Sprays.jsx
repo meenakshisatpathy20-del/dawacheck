@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api.js";
+import { api, appUrl } from "../api.js";
 import { useStore } from "../store.jsx";
 import { t } from "../strings.js";
 import { RuleList, Shell } from "./common.jsx";
@@ -12,7 +12,7 @@ export default function Sprays() {
   const [rot, setRot] = useState(null);
   const [qr, setQr] = useState(null);
   const [err, setErr] = useState(null);
-  const url = `${window.location.origin}/app/passport/${encodeURIComponent(s.plot)}`;
+  const url = appUrl(`/passport/${encodeURIComponent(s.plot)}`);
 
   useEffect(() => {
     setErr(null);

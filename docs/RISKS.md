@@ -3,7 +3,7 @@
 | Risk | Impact | Mitigation | Built as |
 |---|---|---|---|
 | App cannot prove a product is fake | False sense of safety or false accusation | Wording: "not in registry", "reported by farmers"; route to agriculture department and lab testing | No message ever says "fake"; radar note "reasons to inspect, not proof"; test asserts it |
-| CIB&RC PDFs are messy and change | Wrong or missing label claims | Source file + page on every row; 30-question test set; re-parse each edition | `pipeline/`, `review.csv`, `data/kb_questions.json`, `test_kb_questions.py` |
+| CIB&RC PDFs are messy and change | Wrong or missing label claims | Source file + page on every row; 30-question test set; re-parse each edition | `pipeline/`, `review.csv`, `backend/data/kb_questions.json`, `test_kb_questions.py` |
 | OCR errors on worn or glossy packs | Wrong product identified | Farmer confirms product; low-confidence fields asked again; QR preferred | Confirm screen with pack photo, per-field photo crops, editable fields; strength/form cross-check; live QR detection |
 | Brand → ingredient catalogue incomplete | Unknown products show as "not found" | Separate verdict: "not in our catalogue yet" (grey) vs "not in registry" (red); crowd-add with photo review | Rule G1; "Add this product" with photo; admin review queue |
 | Tank-mix science is limited | Over-claiming | Check only duplicates, resistance group, toxicity; say so | Rules R9–R11 (+ jar-test hint M4); `limit_note` shown on screen |

@@ -1,0 +1,10 @@
+# Full stack (Docker, local): core + server-side QR/OCR, S3/MinIO, Redis cache + RQ queue, tests, pipeline.
+-r requirements.txt
+numpy>=1.26
+opencv-python-headless>=4.9
+pytesseract>=0.3
+boto3>=1.34
+redis>=5.0
+rq>=1.16
+pytest>=8.0
+pdfplumber>=0.11
