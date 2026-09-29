@@ -9,6 +9,8 @@ const C = {
 const HEAD = "Cambria";
 const BODY = "Calibri";
 
+const path = require("path");
+const SCREEN = (n) => path.join(__dirname, "screens", `${n}.png`); // real app screenshots (docs/deck/screens)
 const pres = new pptxgen();
 pres.layout = "LAYOUT_16x9"; // 10 x 5.625 in
 pres.title = "DawaCheck pitch";
@@ -50,7 +52,8 @@ function phone(slide, x, y, verdict = "green") {
   text(s, "Plantix tells you the disease. DawaCheck tells you whether the pesticide the dealer handed you is genuine, approved for your crop, safe to mix, and when your harvest is safe to sell.",
     { x: 0.6, y: 2.15, w: 5.6, h: 1.4, fontSize: 16, color: "E8F2EA", italic: true });
   text(s, "Voice-first pesticide check at the moment of purchase", { x: 0.6, y: 3.8, w: 5.6, h: 0.4, fontSize: 13, color: "B7D3BF" });
-  phone(s, 7.0, 0.6, "green");
+  s.addImage({ path: SCREEN("03-verdict"), x: 7.1, y: 0.45, w: 2.35, h: 4.7, rounding: false,
+    altText: "DawaCheck app showing a green verdict" });
   s.addNotes("Add your team name here before the pitch. One line: DawaCheck checks the bottle, not the leaf.");
 }
 
@@ -123,23 +126,22 @@ function phone(slide, x, y, verdict = "green") {
   s.addNotes("Every existing app answers which disease. We answer the next eight questions: is this product real, is it allowed on this crop, how much, can I mix it, how do I stay safe, what if I get sick, when can I harvest, and will the buyer accept it.");
 }
 
-// 5 Solution
+// 5 Solution (real phone screenshots of the flow)
 {
   const s = pres.addSlide();
   s.background = { color: C.paper };
   title(s, "Scan, verify, dose, harvest safely");
-  const steps = [["📷", "Scan", "QR, label photo or dealer bill"], ["✔", "Verify", "Registry, ban list, crop and pest"],
-    ["🥛", "Dose", "ml per tank and number of tanks"], ["📅", "Safe harvest", "Spray date + waiting period"],
-    ["🔳", "Passport", "QR spray record for the buyer"]];
-  steps.forEach(([ico, h, d], i) => {
+  const steps = [["02-scan", "1 Scan", "QR or label photo"], ["03-verdict", "2 Verify", "Registry, bans, crop + pest"],
+    ["04-dose", "3 Dose", "Per tank, gear, weather"], ["05-saved", "4 Safe harvest", "Date + reminder"],
+    ["06-passport", "5 Passport", "QR record for the buyer"]];
+  steps.forEach(([img, h, d], i) => {
     const x = 0.5 + i * 1.84;
-    card(s, x, 1.4, 1.64, 2.6);
-    dot(s, x + 0.52, 1.6, 0.6, i === 1 ? C.green : C.forest, ico, 18);
-    text(s, h, { x: x + 0.1, y: 2.35, w: 1.44, h: 0.4, fontSize: 16, bold: true, align: "center", fontFace: HEAD });
-    text(s, d, { x: x + 0.12, y: 2.8, w: 1.4, h: 1.0, fontSize: 12, color: C.muted, align: "center" });
+    s.addImage({ path: SCREEN(img), x: x + 0.12, y: 1.05, w: 1.4, h: 2.8, altText: h });
+    text(s, h, { x, y: 3.95, w: 1.64, h: 0.32, fontSize: 13, bold: true, align: "center", fontFace: HEAD });
+    text(s, d, { x, y: 4.27, w: 1.64, h: 0.4, fontSize: 10.5, color: C.muted, align: "center" });
   });
-  text(s, "Three taps to a spoken verdict in Hindi, Marathi or Punjabi. Colour + icon + sound, never colour alone.",
-    { x: 0.5, y: 4.3, w: 9, h: 0.5, fontSize: 15, color: C.forest, bold: true, align: "center" });
+  text(s, "Three taps to a spoken verdict in Hindi, Marathi, Punjabi or Telugu. Colour + icon + sound, never colour alone.",
+    { x: 0.5, y: 4.75, w: 9, h: 0.4, fontSize: 13, color: C.forest, bold: true, align: "center" });
 }
 
 // 6 WOW features
@@ -178,11 +180,11 @@ function phone(slide, x, y, verdict = "green") {
   box(0.5, 1.15, 2.9, 0.8, "Farmer app (PWA)", "Camera, voice, offline cache");
   box(3.55, 1.15, 2.9, 0.8, "Officer / FPO dashboard", "Radar map, passports");
   box(6.6, 1.15, 2.9, 0.8, "MRL Passport page", "Public link behind the QR");
-  box(0.5, 2.15, 9, 0.6, "FastAPI backend", "/scan  /bill  /mix-check  /dose  /spray-log  /passport  /sos  /weather-window  /radar");
+  box(0.5, 2.1, 9, 0.72, "FastAPI backend", "/scan  /bill  /mix-check  /dose  /spray-log  /passport  /sos  /weather-window  /radar");
   box(0.5, 2.95, 2.9, 1.1, "AI reading layer", "QR decode, OCR, LLM text to strict JSON, fuzzy match");
   box(3.55, 2.95, 2.9, 1.1, "Rules engine R1 to R13", "Rules stored as data; worst colour wins; cites file + page", C.mint, C.forest);
   box(6.6, 2.95, 2.9, 1.1, "Supporting services", "Weather window, Doctor Card, batch-signal scorer");
-  box(0.5, 4.25, 9, 0.75, "Knowledge base: PostgreSQL + PostGIS", "label_claims, products, bans, export_flags, scans, spray_log, batch_signals, prices  ·  built from CIB&RC PDFs by an offline pipeline");
+  box(0.5, 4.2, 9, 0.9, "Knowledge base: PostgreSQL + PostGIS", "label_claims, products, bans, export_flags, scans, spray_log, batch_signals, prices  ·  built from CIB&RC PDFs by an offline pipeline");
   s.addNotes("What if the AI reads the label wrong? The AI only reads; the farmer confirms the product; rules decide; every verdict cites the CIB&RC page.");
 }
 
@@ -191,15 +193,15 @@ function phone(slide, x, y, verdict = "green") {
   const s = pres.addSlide();
   s.background = { color: C.paper };
   title(s, "What is built and tested");
-  const stats = [["79", "automated tests passing (rules, API, pipeline)"], ["30 / 30", "knowledge-base questions answered correctly"],
-    ["13", "verdict rules, each citing its source"], ["4", "languages: English, Hindi, Marathi, Punjabi"]];
+  const stats = [["99", "automated tests passing, incl. photo OCR end to end"], ["30/30", "knowledge-base questions answered correctly"],
+    ["R1–R13", "verdict rules stored as data, each citing its source"], ["5", "languages: English, Hindi, Marathi, Punjabi, Telugu"]];
   stats.forEach(([n, l], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 1.25 + Math.floor(i / 2) * 1.45;
     card(s, x, y, 4.3, 1.25);
-    text(s, n, { x: x + 0.25, y: y + 0.15, w: 1.9, h: 0.95, fontSize: 36, bold: true, color: C.green, fontFace: HEAD, valign: "middle" });
-    text(s, l, { x: x + 2.15, y: y + 0.2, w: 2.0, h: 0.85, fontSize: 13, color: C.ink, valign: "middle" });
+    text(s, n, { x: x + 0.25, y: y + 0.15, w: 2.1, h: 0.95, fontSize: 30, bold: true, color: C.green, fontFace: HEAD, valign: "middle" });
+    text(s, l, { x: x + 2.4, y: y + 0.2, w: 1.75, h: 0.85, fontSize: 12.5, color: C.ink, valign: "middle" });
   });
-  text(s, "To add before the pitch: OCR + extraction accuracy on 50 real packs, and counts of products and label claims loaded from the parsed CIB&RC PDFs (current label claims are sample data).",
+  text(s, "To add before the pitch: accuracy on your 50 real pack photos (run scripts/accuracy_report.py) and the counts of products and label claims loaded from the parsed CIB&RC PDFs (current label claims are sample data).",
     { x: 0.5, y: 4.2, w: 9, h: 0.7, fontSize: 12, color: C.amber, italic: true });
 }
 
@@ -231,12 +233,16 @@ function phone(slide, x, y, verdict = "green") {
   const s = pres.addSlide();
   s.background = { color: C.forest };
   title(s, "Roadmap and our ask", { color: C.white });
-  const road = [["Next", "Packaging forensics (genuine vs suspicious pack photos)"], ["Next", "IVR / missed-call access for feature phones"],
-    ["Later", "WhatsApp bot, diagnosis link, drone mode"], ["Later", "AgriStack and Kisan Call Centre integration"]];
-  road.forEach(([when, what], i) => {
-    const y = 1.25 + i * 0.72;
-    text(s, when, { x: 0.5, y, w: 0.9, h: 0.5, fontSize: 12, bold: true, color: "B7D3BF", valign: "middle" });
-    text(s, what, { x: 1.4, y, w: 4.4, h: 0.5, fontSize: 14, color: C.white, valign: "middle" });
+  const road = [
+    ["Packaging forensics", "compare pack photos with genuine packs"], ["IVR / missed call", "for feature phones"],
+    ["WhatsApp bot", "scan and verdict, no app install"], ["Diagnosis link", "crop photo feeds the label-claim check"],
+    ["Dealer trust score", "Verified Dealer badge"], ["Drone mode", "drone approval status + SOP"],
+    ["Container disposal", "collection points"], ["AgriStack + KCC", "farmer ID, Kisan Call Centre hand-off"],
+    ["Official QR registry", "verify QR once a central registry exists"]];
+  road.forEach(([what, why], i) => {
+    const y = 1.05 + i * 0.36;
+    text(s, what, { x: 0.5, y, w: 2.15, h: 0.33, fontSize: 12, bold: true, color: C.white, valign: "middle" });
+    text(s, why, { x: 2.7, y, w: 3.3, h: 0.33, fontSize: 10.5, color: "D5E8DA", valign: "middle" });
   });
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.2, y: 1.25, w: 3.3, h: 2.75, rectRadius: 0.15, fill: { color: C.white }, line: { color: C.white } });
   text(s, "The ask", { x: 6.45, y: 1.4, w: 2.8, h: 0.4, fontSize: 16, bold: true, color: C.forest, fontFace: HEAD });
@@ -244,7 +250,7 @@ function phone(slide, x, y, verdict = "green") {
     { x: 6.45, y: 1.85, w: 2.8, h: 1.2, fontSize: 13, color: C.ink });
   text(s, "Demo video: add QR here", { x: 6.45, y: 3.25, w: 2.8, h: 0.5, fontSize: 11, color: C.muted, italic: true });
   text(s, "DawaCheck helps farmers ask the right question at the shop. It does not replace the agriculture officer, the lab or the doctor.",
-    { x: 0.5, y: 4.35, w: 9, h: 0.6, fontSize: 13, color: "E8F2EA", italic: true });
+    { x: 0.5, y: 4.5, w: 9, h: 0.6, fontSize: 13, color: "E8F2EA", italic: true });
   s.addNotes("Plantix tells you the disease. DawaCheck takes responsibility for the dose, from the dealer's shop to the dinner plate.");
 }
 
