@@ -3,7 +3,8 @@ import { api } from "../api.js";
 import { useStore } from "../store.jsx";
 import { t } from "../strings.js";
 import { speak, verdictTone } from "../voice.js";
-import { ProductPicker, RuleList, Shell, VerdictBanner } from "./common.jsx";
+import Camera from "./Camera.jsx";
+import { Loading, ProductPicker, RuleList, Shell, VerdictBanner } from "./common.jsx";
 
 function Tank({ items, remove }) {
   return (
@@ -26,10 +27,26 @@ function Tank({ items, remove }) {
 }
 
 export default function Mix() {
-  const { lang } = useStore();
+  const s = useStore();
+  const { lang } = s;
   const [picked, setPicked] = useState([]);
   const [res, setRes] = useState(null);
   const [err, setErr] = useState(null);
+  const [camera, setCamera] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // Scan each pack with the camera (QR or label photo); the product is added to the tank.
+  const addScanned = async (params, photo) => {
+    setBusy(true); setErr(null);
+    try {
+      const base = { lang, crop: s.crop, user_id: s.userId, district: s.district, shop: s.shop };
+      const r = photo ? await api.scanPhoto({ ...base, ...params }) : await api.scan({ ...base, ...params });
+      const p = r.product || null;
+      if (!p) setErr(t(lang, "noOcr"));
+      else if (!picked.some((x) => x.id === p.id)) setPicked((old) => [...old, p]);
+      setCamera(false);
+    } catch (e) { setErr(e.message); } finally { setBusy(false); }
+  };
 
   const check = async () => {
     setErr(null);
@@ -65,6 +82,10 @@ export default function Mix() {
             <button className="btn block" disabled={picked.length < 2} onClick={check}>{t(lang, "check")} ({picked.length}/4)</button>
             {err && <div className="error">{err}</div>}
           </div>
+          {picked.length < 4 && (camera
+            ? <Camera busy={busy} onQr={(qr) => addScanned({ qr_payload: qr })} onPhoto={(b) => addScanned({ image: b }, true)} />
+            : <button className="big" style={{ width: "100%" }} onClick={() => setCamera(true)}><span className="ico">📷</span>{t(lang, "scanPacket")}</button>)}
+          {busy && <Loading />}
           {picked.length < 4 && <ProductPicker exclude={picked.map((p) => p.id)} onPick={(p) => setPicked([...picked, p])} />}
         </>
       )}

@@ -23,22 +23,33 @@ export default function Sos() {
   const npic = d?.helplines?.[0] || { phone: "1800 116 117", tel: "18001161117" };
 
   if (card && d) {
+    // English (for the doctor) + the farmer's language, side by side.
+    const L = (k) => {
+      const en = d.labels.en[k];
+      const local = d.labels[s.lang]?.[k];
+      return local && local !== en ? <>{en}<br /><small>{local}</small></> : en;
+    };
+    const colour = (c) => {
+      const en = COLOUR_WORD[c] || "—";
+      const local = d.colour_names?.[s.lang]?.[c];
+      return local && s.lang !== "en" ? `${en} · ${local}` : en;
+    };
     return (
       <div className="doctor" onClick={() => setCard(false)}>
-        <h1>🩺 DOCTOR CARD</h1>
-        <p><b>Pesticide exposure (farm spraying).</b> Details below are copied from the product label.</p>
-        {d.doctor_card.length === 0 && <p>No product recorded. Ask the patient for the container.</p>}
+        <h1>🩺 {L("title")}</h1>
+        <p>{L("exposure")}</p>
+        {d.doctor_card.length === 0 && <p>{L("none")}</p>}
         {d.doctor_card.map((c, i) => (
           <div key={i} className="kv">
-            <b>Product</b><span>{c.product}</span>
-            <b>Active ingredient</b><span>{c.strength}</span>
-            <b>Chemical class</b><span>{c.chem_class || "—"} {c.moa_group ? `(group ${c.moa_group})` : ""}</span>
-            <b>Label colour</b><span><span className="tri" style={{ color: c.label_colour === "blue" ? "#1e5aa8" : c.label_colour }} /> {COLOUR_WORD[c.label_colour] || "—"}</span>
-            <b>Antidote / treatment on label</b><span>{c.antidote_from_label || "See label"}</span>
-            <b>Last spray</b><span>{c.last_spray || "—"}</span>
+            <b>{L("product")}</b><span>{c.product}</span>
+            <b>{L("ai")}</b><span>{c.strength}</span>
+            <b>{L("class")}</b><span>{c.chem_class || "—"} {c.moa_group ? `(group ${c.moa_group})` : ""}</span>
+            <b>{L("colour")}</b><span><span className="tri" style={{ color: c.label_colour === "blue" ? "#1e5aa8" : c.label_colour }} /> {colour(c.label_colour)}</span>
+            <b>{L("antidote")}</b><span>{c.antidote_from_label || "See label"}</span>
+            <b>{L("last_spray")}</b><span>{c.last_spray || "—"}</span>
           </div>
         ))}
-        <p><b>Poisons Information Centre (AIIMS):</b> {npic.phone}</p>
+        <p><b>{L("npic")}:</b> {npic.phone}</p>
         <p style={{ fontSize: "1rem" }}>{d.disclaimer}</p>
       </div>
     );

@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
 import { useStore } from "../store.jsx";
-import { CROP_ICON, CROP_NAME, PEST_ICON, TTS, t } from "../strings.js";
+import { CROP_ICON, CROP_NAME, PEST_ICON, TTS, pestName, t } from "../strings.js";
 import { listen } from "../voice.js";
-import { Shell } from "./common.jsx";
+import { Pic, Shell } from "./common.jsx";
 
 const STATES = ["", "andhra pradesh", "gujarat", "haryana", "karnataka", "madhya pradesh", "maharashtra", "punjab",
   "rajasthan", "tamil nadu", "telangana", "uttar pradesh", "west bengal"];
@@ -12,7 +12,8 @@ const STATES = ["", "andhra pradesh", "gujarat", "haryana", "karnataka", "madhya
 // "kapas sundi" -> crop + pest, using a few spoken words; the backend normalises the rest.
 const SPOKEN = { kapas: "cotton", kapus: "cotton", narma: "cotton", dhan: "rice", paddy: "rice", jhona: "rice",
   basmati: "basmati", tamatar: "tomato", tomato: "tomato", cotton: "cotton", rice: "rice",
-  sundi: "bollworm", "hara tela": "jassid", tela: "brown plant hopper", mahu: "aphid", "safed makhi": "whitefly",
+  patti: "cotton", pathi: "cotton", vari: "rice", tamata: "tomato",
+  sundi: "bollworm", "kaya tolucha": "bollworm", "pacha doma": "jassid", "tella doma": "whitefly", aggi: "blast", "hara tela": "jassid", tela: "brown plant hopper", mahu: "aphid", "safed makhi": "whitefly",
   jhulsa: "blast", "fal chhedak": "fruit borer" };
 
 export default function CropPest() {
@@ -50,7 +51,7 @@ export default function CropPest() {
       <div className="pick-grid">
         {Object.keys(crops).map((c) => (
           <button key={c} className={`pick ${crop === c ? "on" : ""}`} onClick={() => setCrop(c)}>
-            <span className="ico">{CROP_ICON[c] || "🌱"}</span>{CROP_NAME[s.lang][c] || c}
+            <Pic kind="crops" name={c} emoji={CROP_ICON[c] || "🌱"} />{CROP_NAME[s.lang][c] || c}
           </button>
         ))}
       </div>
@@ -60,7 +61,7 @@ export default function CropPest() {
           <div className="pick-grid">
             {crops[crop].map((p) => (
               <button key={p} className={`pick ${s.pest === p && s.crop === crop ? "on" : ""}`} onClick={() => finish(p)}>
-                <span className="ico">{PEST_ICON[p] || "🐞"}</span>{p}
+                <Pic kind="pests" name={p} emoji={PEST_ICON[p] || "🐞"} />{pestName(s.lang, p)}
               </button>
             ))}
             <button className="pick" onClick={() => finish(null)}><span className="ico">❓</span>{t(s.lang, "anyPest")}</button>

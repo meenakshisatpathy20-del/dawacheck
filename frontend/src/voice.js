@@ -13,7 +13,27 @@ export function speak(text, locale = "en-IN") {
   return true;
 }
 
+// Pre-recorded clips (playbook section 10: "pre-recorded or TTS for templated messages"):
+// public/audio/<lang>/<message_key>.mp3 is played when present; it works offline once cached.
+// Generate them with scripts/make_voice_clips.py. Anything without a clip is spoken by TTS.
+let clipAudio = null;
+export function playClip(lang, key) {
+  return new Promise((resolve) => {
+    const a = new Audio(`/app/audio/${lang}/${key}.mp3`);
+    clipAudio = a;
+    a.onended = () => resolve(true);
+    a.onerror = () => resolve(false);
+    a.play().catch(() => resolve(false));
+  });
+}
+
+export async function speakVerdict({ verdict, lang, locale, rest, headline }) {
+  const played = await playClip(lang, `verdict.${verdict}`);
+  speak(played ? rest : [headline, rest].filter(Boolean).join(" "), locale);
+}
+
 export function stopSpeaking() {
+  if (clipAudio) clipAudio.pause();
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
