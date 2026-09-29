@@ -9,6 +9,7 @@ os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", f"sqlite:///{_D
 os.environ["DAWACHECK_OFFLINE"] = "1"
 os.environ["LLM_ENABLED"] = "off"
 os.environ["UPLOAD_DIR"] = str(_DB.parent / "uploads")
+os.environ["ADMIN_TOKEN"] = "test-admin-token"
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest  # noqa: E402

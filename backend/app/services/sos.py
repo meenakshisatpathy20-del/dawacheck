@@ -49,8 +49,12 @@ def doctor_card(db: Session, user_id: str | None = None, product_ids: list[int] 
     elif user_id:
         h = scan.user_hash(user_id)
         for s in db.scalars(select(models.SprayLog).where(models.SprayLog.user_hash == h)
-                            .order_by(models.SprayLog.spray_date.desc()).limit(3)):
-            entries.append((s.product, s.spray_date.isoformat()))
+                            .order_by(models.SprayLog.spray_date.desc(), models.SprayLog.created_at.desc()).limit(3)):
+            # Date sprayed, plus the time it was logged in the app (logged right after spraying).
+            when = s.spray_date.isoformat()
+            if s.created_at and s.created_at.date() == s.spray_date:
+                when += f" {s.created_at.strftime('%H:%M')} UTC"
+            entries.append((s.product, when))
         for s in db.scalars(select(models.Scan).where(models.Scan.user_hash == h, models.Scan.product_id.is_not(None))
                             .order_by(models.Scan.created_at.desc()).limit(3)):
             entries.append((db.get(models.Product, s.product_id), None))
@@ -74,8 +78,13 @@ def sos(db: Session, lat=None, lon=None, user_id=None, product_ids=None, lang: s
     if not first_aid:
         ai = db.scalar(select(models.ActiveIngredient).limit(1))
         first_aid = ai.first_aid_text if ai else None
+    label_keys = ["title", "exposure", "product", "ai", "class", "colour", "antidote", "last_spray", "none", "npic"]
     return {
         "helplines": [NPIC, AMBULANCE],
+        # Doctor Card is shown in English (for the doctor) and the farmer's language side by side.
+        "labels": {lg: {k: i18n.t(f"doctor.{k}", lg) for k in label_keys} for lg in dict.fromkeys(["en", lang])},
+        "colour_names": {lg: {c: i18n.t(f"colour.{c}", lg) for c in ("red", "yellow", "blue", "green")}
+                         for lg in dict.fromkeys(["en", lang])},
         "say": [i18n.t("sos.call", lang), i18n.t("sos.ambulance", lang)],
         "first_aid": first_aid,
         "doctor_card": cards,

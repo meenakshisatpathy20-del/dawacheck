@@ -46,6 +46,20 @@ export const api = {
       throw e;
     }
   },
+  // Label photos go through the OCR queue (Redis worker in production); poll until done.
+  async scanPhoto(params, onQueued) {
+    const job = await request("/scan/async", { method: "POST", body: form(params) });
+    onQueued && onQueued(job);
+    for (let i = 0; i < 120; i++) {
+      const st = await request(`/jobs/${encodeURIComponent(job.job_id)}`);
+      if (st.status === "done") return st.result;
+      if (st.status === "failed") throw new Error(st.error || "OCR failed");
+      await new Promise((r) => setTimeout(r, 700));
+    }
+    throw new Error("OCR timed out");
+  },
+  submitProduct: (params) => request("/products/submit", { method: "POST", body: form(params) }),
+  reminderUrl: (plot) => `${BASE}/reminder.ics?plot_id=${encodeURIComponent(plot)}`,
   bill: (params) => request("/bill", { method: "POST", body: form(params) }),
   mix: (product_ids, lang) => request("/mix-check", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product_ids, lang }),
@@ -60,8 +74,8 @@ export const api = {
   report: (params) => request("/report", { method: "POST", body: form(params) }),
   radar: (district) => request(`/radar${district ? `?district=${encodeURIComponent(district)}` : ""}`),
   batch: (batch, product_id) => request(`/radar/batch?batch=${encodeURIComponent(batch)}${product_id ? `&product_id=${product_id}` : ""}`),
-  explain: (fired, lang) => request("/explain", {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fired, lang }),
+  explain: (fired, lang, ctx = {}) => request("/explain", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fired, lang, ...ctx }),
   }),
   async products() {
     try {
@@ -88,3 +102,36 @@ export const api = {
 };
 
 export const fpoPlots = () => fetch((import.meta.env.VITE_API_URL || "") + "/fpo/plots").then((r) => r.json());
+
+// Admin screen (section 18): token kept only in this browser's session.
+const adminHeaders = (json) => ({ "X-Admin-Token": sessionStorage.getItem("dc.admin") || "",
+  ...(json ? { "Content-Type": "application/json" } : {}) });
+export const admin = {
+  bans: () => request("/admin/bans", { headers: adminHeaders() }),
+  addStateBan: (b) => request("/admin/state-bans", { method: "POST", headers: adminHeaders(true), body: JSON.stringify(b) }),
+  deleteStateBan: (id) => request(`/admin/state-bans/${id}`, { method: "DELETE", headers: adminHeaders() }),
+  setNational: (name, b) => request(`/admin/ingredients/${encodeURIComponent(name)}`, {
+    method: "PUT", headers: adminHeaders(true), body: JSON.stringify(b) }),
+  submissions: (status = "pending") => request(`/admin/submissions?status=${status}`, { headers: adminHeaders() }),
+  approve: (id, b) => request(`/admin/submissions/${id}/approve`, { method: "POST", headers: adminHeaders(true), body: JSON.stringify(b) }),
+  reject: (id, note) => request(`/admin/submissions/${id}/reject`, { method: "POST", headers: adminHeaders(), body: form({ note }) }),
+};
+
+// Harvest reminders: stored on the phone, checked when the app opens (and a calendar .ics is offered).
+export const reminders = {
+  list() { try { return JSON.parse(localStorage.getItem("dc.reminders") || "[]"); } catch { return []; } },
+  add(r) {
+    const all = reminders.list().filter((x) => x.plot !== r.plot);
+    all.push(r);
+    try { localStorage.setItem("dc.reminders", JSON.stringify(all)); } catch { /* ignore */ }
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+  },
+  due() {
+    const today = new Date().toISOString().slice(0, 10);
+    return reminders.list().filter((r) => r.date <= today && !r.shown);
+  },
+  markShown(plot) {
+    const all = reminders.list().map((x) => (x.plot === plot ? { ...x, shown: true } : x));
+    try { localStorage.setItem("dc.reminders", JSON.stringify(all)); } catch { /* ignore */ }
+  },
+};

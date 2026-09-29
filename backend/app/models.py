@@ -21,6 +21,7 @@ class ActiveIngredient(Base):
     banned: Mapped[bool] = mapped_column(Boolean, default=False)
     restricted: Mapped[bool] = mapped_column(Boolean, default=False)
     ban_note: Mapped[str | None] = mapped_column(Text)
+    banned_from: Mapped[date | None] = mapped_column(Date)  # effective date of a ban added by an admin
     antidote_text: Mapped[str | None] = mapped_column(Text)
     first_aid_text: Mapped[str | None] = mapped_column(Text)
     source_url: Mapped[str | None] = mapped_column(Text)
@@ -179,4 +180,23 @@ class Report(Base):
     reason: Mapped[str] = mapped_column(Text)
     photo_url: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="open")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class ProductSubmission(Base):
+    """A farmer adds a product that is 'not in our catalogue yet'; an admin reviews the photo."""
+    __tablename__ = "product_submissions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    brand: Mapped[str] = mapped_column(String(120))
+    active_ingredient: Mapped[str | None] = mapped_column(String(120))
+    strength_pct: Mapped[float | None] = mapped_column(Float)
+    formulation: Mapped[str | None] = mapped_column(String(10))
+    reg_no: Mapped[str | None] = mapped_column(String(60))
+    company: Mapped[str | None] = mapped_column(String(160))
+    toxicity_colour: Mapped[str | None] = mapped_column(String(10))
+    photo_url: Mapped[str | None] = mapped_column(Text)
+    user_hash: Mapped[str | None] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending / approved / rejected
+    review_note: Mapped[str | None] = mapped_column(Text)
+    product_id: Mapped[int | None] = mapped_column(ForeignKey("products.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

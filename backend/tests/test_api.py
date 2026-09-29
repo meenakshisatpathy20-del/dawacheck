@@ -156,7 +156,7 @@ def test_report_radar_and_batch_detail(client, pid):
 def test_catalogue_endpoints(client):
     assert "basmati" in client.get("/crops").json()
     pack = client.get("/offline-pack").json()
-    assert len(pack["products"]) >= 30 and set(pack["i18n"]) == {"en", "hi", "mr", "pa"}
+    assert len(pack["products"]) >= 30 and set(pack["i18n"]) == {"en", "hi", "mr", "pa", "te"}
     assert client.get("/i18n/pa").json()["verdict.red"].startswith("ਰੁਕੋ")
     assert client.post("/explain", json={"fired": [{"id": "R5", "message": "Not approved for cotton."}]}).json()["text"]
 
@@ -164,5 +164,5 @@ def test_catalogue_endpoints(client):
 def test_translations_have_every_key():
     from app import i18n
     en = {k for k in i18n.table("en") if not k.startswith("_")}
-    for lang in ("hi", "mr", "pa"):
+    for lang in ("hi", "mr", "pa", "te"):
         assert en - set(i18n.table(lang)) == set(), lang

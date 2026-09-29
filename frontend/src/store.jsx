@@ -20,15 +20,16 @@ function deviceId() {
 
 export function StoreProvider({ children }) {
   const [s, setS] = useState(() => ({
-    lang: load("dc.lang", (navigator.language || "en").slice(0, 2) in { hi: 1, mr: 1, pa: 1 } ? navigator.language.slice(0, 2) : "en"),
+    // Phone language by default (playbook C8).
+    lang: load("dc.lang", (navigator.language || "en").slice(0, 2) in { hi: 1, mr: 1, pa: 1, te: 1 } ? navigator.language.slice(0, 2) : "en"),
     crop: load("dc.crop", null), pest: load("dc.pest", null), state: load("dc.state", ""),
     area: load("dc.area", 1), pump: load("dc.pump", 15), plot: load("dc.plot", "my-plot-1"),
-    district: load("dc.district", ""), lastSafe: load("dc.lastSafe", null), gps: null,
+    district: load("dc.district", ""), shop: load("dc.shop", ""), lastSafe: load("dc.lastSafe", null), gps: null,
   }));
   const userId = useMemo(deviceId, []);
 
   useEffect(() => {
-    for (const k of ["lang", "crop", "pest", "state", "area", "pump", "plot", "district", "lastSafe"]) {
+    for (const k of ["lang", "crop", "pest", "state", "area", "pump", "plot", "district", "shop", "lastSafe"]) {
       try { localStorage.setItem(`dc.${k}`, JSON.stringify(s[k])); } catch { /* ignore */ }
     }
   }, [s]);

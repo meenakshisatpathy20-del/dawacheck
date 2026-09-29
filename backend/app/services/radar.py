@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from .. import models
+from .. import geo, models
 
 CLONE_KM = 200
 CLONE_WINDOW = timedelta(days=7)
@@ -56,19 +56,8 @@ def recompute(db: Session) -> int:
                 {"mfg_seen": sorted(f"{y}-{m:02d}" for y, m in mfgs), "exp_seen": sorted(f"{y}-{m:02d}" for y, m in exps)},
                 extra=0.2 * (max(len(mfgs), len(exps)) - 2))
 
-    by_qr: dict[str, list[models.Scan]] = defaultdict(list)
-    for s in scans:
-        if s.qr_payload_hash and s.lat is not None:
-            by_qr[s.qr_payload_hash].append(s)
-    for h, rows in by_qr.items():
-        rows.sort(key=lambda r: r.created_at)
-        for i, a in enumerate(rows):
-            far = [b for b in rows[i + 1:] if b.created_at - a.created_at <= CLONE_WINDOW
-                   and haversine_km((a.lat, a.lon), (b.lat, b.lon)) >= CLONE_KM]
-            if far:
-                km = round(max(haversine_km((a.lat, a.lon), (b.lat, b.lon)) for b in far))
-                add("cloned_qr", a.product_id, a.batch, [a, *far], {"max_km": km, "qr_hash": h[:12]})
-                break
+    for rows, km, h in _cloned_qr_groups(db, scans):
+        add("cloned_qr", rows[0].product_id, rows[0].batch, rows, {"max_km": km, "qr_hash": h[:12]})
 
     unregistered = defaultdict(list)
     for s in scans:
@@ -93,6 +82,34 @@ def recompute(db: Session) -> int:
     db.add_all(signals)
     db.flush()
     return len(signals)
+
+
+def _cloned_qr_groups(db: Session, scans: list[models.Scan]):
+    """Same QR payload scanned >= CLONE_KM apart within CLONE_WINDOW. PostGIS when available."""
+    by_id = {s.id: s for s in scans}
+    groups: dict[str, dict] = {}
+    if geo.available():
+        db.flush()
+        for a_id, b_id, km in geo.cloned_qr_pairs(db, CLONE_KM, CLONE_WINDOW):
+            a, b = by_id[a_id], by_id[b_id]
+            g = groups.setdefault(a.qr_payload_hash, {"rows": {}, "km": 0.0})
+            g["rows"][a.id], g["rows"][b.id] = a, b
+            g["km"] = max(g["km"], km)
+    else:
+        by_qr: dict[str, list[models.Scan]] = defaultdict(list)
+        for s in scans:
+            if s.qr_payload_hash and s.lat is not None:
+                by_qr[s.qr_payload_hash].append(s)
+        for h, rows in by_qr.items():
+            rows.sort(key=lambda r: r.created_at)
+            for i, a in enumerate(rows):
+                for b in rows[i + 1:]:
+                    km = haversine_km((a.lat, a.lon), (b.lat, b.lon))
+                    if b.created_at - a.created_at <= CLONE_WINDOW and km >= CLONE_KM:
+                        g = groups.setdefault(h, {"rows": {}, "km": 0.0})
+                        g["rows"][a.id], g["rows"][b.id] = a, b
+                        g["km"] = max(g["km"], km)
+    return [(sorted(g["rows"].values(), key=lambda r: r.created_at), round(g["km"]), h) for h, g in groups.items()]
 
 
 def signal_for(db: Session, product_id: int | None, batch: str | None) -> dict | None:
@@ -133,8 +150,9 @@ def dashboard(db: Session, district: str | None = None, days: int = 90) -> dict:
         c["scans"] += 1
         c["red"] += 1 if s.verdict == "red" else 0
         c["flagged"] += 1 if (s.product_id, s.batch) in flagged else 0
+    centroids = geo.district_centroids(db, since) if geo.available() else {}
     for c in clusters.values():
-        c["lat"], c["lon"] = c["lat"] / c["n"], c["lon"] / c["n"]
+        c["lat"], c["lon"] = centroids.get(c["district"], (c["lat"] / c["n"], c["lon"] / c["n"]))
         c["risk"] = "red" if c["flagged"] or c["red"] else "green"
         del c["n"]
 
@@ -151,6 +169,7 @@ def dashboard(db: Session, district: str | None = None, days: int = 90) -> dict:
                    "yellow": sum(1 for s in scans if s.verdict == "yellow"),
                    "flagged_batches": len({(b["product_id"], b["batch"]) for b in batches if b["score"] >= 1.0})},
         "note": "Signals are reasons to inspect, not proof. Only a lab test shows a product is spurious.",
+        "geo_engine": "postgis" if geo.available() else "python",
     }
 
 

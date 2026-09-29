@@ -119,6 +119,34 @@ def load_all(db: Session, seed_dir: Path = config.SEED_DIR, demo_scans: bool = T
     counts["export_flags"] = len(flags["items"])
     db.flush()
 
+    # Outputs of pipeline/parse_registry.py, when the official lists have been parsed.
+    if (seed_dir / "registered_formulations.json").exists():
+        n = 0
+        for it in _read("registered_formulations.json", seed_dir)["items"]:
+            f = _formulation(db, get_ai(it["ai"]), it["pct"], it["type"], registered=True,
+                             source_file=it.get("source_file"), page=it.get("page"))
+            f.registered = True
+            if it.get("brand") and it["brand"] not in by_brand:
+                p = models.Product(brand=it["brand"], company=it.get("company"), formulation=f,
+                                   reg_no=it.get("reg_no"), pack_sizes=[], mrp={})
+                db.add(p)
+                by_brand[p.brand] = p
+            n += 1
+        counts["registered_formulations"] = n
+    if (seed_dir / "banned_list.json").exists():
+        n = 0
+        for it in _read("banned_list.json", seed_dir)["items"]:
+            ai = get_ai(it["name"])
+            if it["status"] in ("banned", "withdrawn", "refused"):
+                ai.banned = True
+            elif it["status"] == "restricted":
+                ai.restricted = True
+            ai.ban_note = f"{it['status'].title()} (CIB&RC list, {it.get('source_file')}, page {it.get('page')})" + (
+                f": {it['note']}" if it.get("note") else "")
+            n += 1
+        counts["banned_list"] = n
+    db.flush()
+
     if demo_scans and (seed_dir / "demo_scans.json").exists():
         counts["demo_scans"] = _load_demo_scans(db, _read("demo_scans.json", seed_dir), by_brand)
 

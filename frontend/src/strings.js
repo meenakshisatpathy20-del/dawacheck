@@ -1,7 +1,7 @@
 // UI labels (verdict messages come from the backend's translation files).
-// Hindi, Marathi and Punjabi are drafts: review with native speakers before the demo.
-export const LANGS = { en: "English", hi: "हिंदी", mr: "मराठी", pa: "ਪੰਜਾਬੀ" };
-export const TTS = { en: "en-IN", hi: "hi-IN", mr: "mr-IN", pa: "pa-IN" };
+// Hindi, Marathi, Punjabi and Telugu are drafts: review with native speakers before the demo.
+export const LANGS = { en: "English", hi: "हिंदी", mr: "मराठी", pa: "ਪੰਜਾਬੀ", te: "తెలుగు" };
+export const TTS = { en: "en-IN", hi: "hi-IN", mr: "mr-IN", pa: "pa-IN", te: "te-IN" };
 
 const S = {
   en: {
@@ -16,6 +16,13 @@ const S = {
     state: "State", report: "Report this product", reported: "Reported. Thank you.", offline: "Offline: saved result",
     wearGear: "I have gloves and mask", weather: "Spray window", speak: "Speak", noOcr: "Scan the QR code or pick the product.",
     total: "Total", saving: "Possible saving", notApproved: "not approved", sampleData: "Sample data",
+    shop: "Shop (optional, helps catch fake batches)", next: "Next", pointCamera: "Point at the QR code or the label",
+    cameraOff: "Camera not available. Use Take photo.", correct: "Correct?", checkField: "Please check this on the pack",
+    addThis: "Add this product", submitted: "Sent for review. Thank you.", brand: "Brand name", chemical: "Chemical",
+    strength: "Strength %", form: "Form (EC, SL, WP…)", send: "Send", addCalendar: "Add to calendar",
+    reminderSet: "Reminder set", harvestToday: "Safe to harvest today", reason: "What is wrong?", photo: "Photo",
+    gloves: "Gloves", mask: "Mask", goggles: "Goggles", boots: "Boots", sleeves: "Full sleeves",
+    queued: "Reading the label…",
   },
   hi: {
     scanPacket: "पैकेट जाँचें", scanBill: "बिल जाँचें", mixCheck: "मिश्रण जाँच", sos: "SOS",
@@ -29,6 +36,13 @@ const S = {
     state: "राज्य", report: "इस दवा की शिकायत करें", reported: "शिकायत दर्ज। धन्यवाद।", offline: "ऑफ़लाइन: सहेजा परिणाम",
     wearGear: "मेरे पास दस्ताने और मास्क हैं", weather: "छिड़काव का समय", speak: "बोलें", noOcr: "QR कोड स्कैन करें या दवा चुनें।",
     total: "कुल", saving: "संभावित बचत", notApproved: "मंज़ूर नहीं", sampleData: "नमूना डेटा",
+    shop: "दुकान (वैकल्पिक, नकली बैच पकड़ने में मदद)", next: "आगे", pointCamera: "QR कोड या लेबल की ओर कैमरा करें",
+    cameraOff: "कैमरा उपलब्ध नहीं। फ़ोटो लें दबाएँ।", correct: "सही है?", checkField: "कृपया पैकेट पर देखकर जाँचें",
+    addThis: "यह दवा जोड़ें", submitted: "जाँच के लिए भेजा। धन्यवाद।", brand: "ब्रांड का नाम", chemical: "रसायन",
+    strength: "मात्रा %", form: "रूप (EC, SL, WP…)", send: "भेजें", addCalendar: "कैलेंडर में जोड़ें",
+    reminderSet: "याद दिलाना तय", harvestToday: "आज कटाई सुरक्षित है", reason: "क्या गड़बड़ है?", photo: "फ़ोटो",
+    gloves: "दस्ताने", mask: "मास्क", goggles: "चश्मा", boots: "जूते", sleeves: "पूरी बाँह",
+    queued: "लेबल पढ़ा जा रहा है…",
   },
   mr: {
     scanPacket: "पाकीट तपासा", scanBill: "बिल तपासा", mixCheck: "मिश्रण तपासणी", sos: "SOS",
@@ -42,6 +56,13 @@ const S = {
     state: "राज्य", report: "या औषधाची तक्रार करा", reported: "तक्रार नोंदवली. धन्यवाद.", offline: "ऑफलाइन: जतन केलेला निकाल",
     wearGear: "माझ्याकडे हातमोजे आणि मास्क आहेत", weather: "फवारणीची वेळ", speak: "बोला", noOcr: "QR कोड स्कॅन करा किंवा औषध निवडा.",
     total: "एकूण", saving: "संभाव्य बचत", notApproved: "मंजूर नाही", sampleData: "नमुना माहिती",
+    shop: "दुकान (ऐच्छिक, बनावट बॅच पकडण्यास मदत)", next: "पुढे", pointCamera: "QR कोड किंवा लेबलकडे कॅमेरा धरा",
+    cameraOff: "कॅमेरा उपलब्ध नाही. फोटो घ्या दाबा.", correct: "बरोबर आहे?", checkField: "कृपया पाकिटावर पाहून तपासा",
+    addThis: "हे औषध जोडा", submitted: "तपासणीसाठी पाठवले. धन्यवाद.", brand: "ब्रँडचे नाव", chemical: "रसायन",
+    strength: "प्रमाण %", form: "प्रकार (EC, SL, WP…)", send: "पाठवा", addCalendar: "कॅलेंडरमध्ये जोडा",
+    reminderSet: "आठवण ठेवली", harvestToday: "आज काढणी सुरक्षित", reason: "काय चुकीचे आहे?", photo: "फोटो",
+    gloves: "हातमोजे", mask: "मास्क", goggles: "गॉगल", boots: "बूट", sleeves: "पूर्ण बाह्या",
+    queued: "लेबल वाचत आहे…",
   },
   pa: {
     scanPacket: "ਪੈਕਟ ਜਾਂਚੋ", scanBill: "ਬਿੱਲ ਜਾਂਚੋ", mixCheck: "ਮਿਸ਼ਰਣ ਜਾਂਚ", sos: "SOS",
@@ -55,12 +76,40 @@ const S = {
     state: "ਰਾਜ", report: "ਇਸ ਦਵਾਈ ਦੀ ਸ਼ਿਕਾਇਤ ਕਰੋ", reported: "ਸ਼ਿਕਾਇਤ ਦਰਜ। ਧੰਨਵਾਦ।", offline: "ਆਫ਼ਲਾਈਨ: ਸੰਭਾਲਿਆ ਨਤੀਜਾ",
     wearGear: "ਮੇਰੇ ਕੋਲ ਦਸਤਾਨੇ ਅਤੇ ਮਾਸਕ ਹਨ", weather: "ਛਿੜਕਾਅ ਦਾ ਸਮਾਂ", speak: "ਬੋਲੋ", noOcr: "QR ਕੋਡ ਸਕੈਨ ਕਰੋ ਜਾਂ ਦਵਾਈ ਚੁਣੋ।",
     total: "ਕੁੱਲ", saving: "ਸੰਭਾਵੀ ਬੱਚਤ", notApproved: "ਮਨਜ਼ੂਰ ਨਹੀਂ", sampleData: "ਨਮੂਨਾ ਡਾਟਾ",
+    shop: "ਦੁਕਾਨ (ਚੋਣਵਾਂ, ਨਕਲੀ ਬੈਚ ਫੜਨ ਵਿੱਚ ਮਦਦ)", next: "ਅੱਗੇ", pointCamera: "QR ਕੋਡ ਜਾਂ ਲੇਬਲ ਵੱਲ ਕੈਮਰਾ ਕਰੋ",
+    cameraOff: "ਕੈਮਰਾ ਉਪਲਬਧ ਨਹੀਂ। ਫ਼ੋਟੋ ਲਓ ਦਬਾਓ।", correct: "ਠੀਕ ਹੈ?", checkField: "ਕਿਰਪਾ ਕਰਕੇ ਪੈਕਟ ਉੱਤੇ ਦੇਖ ਕੇ ਜਾਂਚੋ",
+    addThis: "ਇਹ ਦਵਾਈ ਜੋੜੋ", submitted: "ਜਾਂਚ ਲਈ ਭੇਜਿਆ। ਧੰਨਵਾਦ।", brand: "ਬ੍ਰਾਂਡ ਦਾ ਨਾਮ", chemical: "ਰਸਾਇਣ",
+    strength: "ਮਾਤਰਾ %", form: "ਕਿਸਮ (EC, SL, WP…)", send: "ਭੇਜੋ", addCalendar: "ਕੈਲੰਡਰ ਵਿੱਚ ਜੋੜੋ",
+    reminderSet: "ਯਾਦ ਦਿਵਾਉਣਾ ਤੈਅ", harvestToday: "ਅੱਜ ਵਾਢੀ ਸੁਰੱਖਿਅਤ", reason: "ਕੀ ਗ਼ਲਤ ਹੈ?", photo: "ਫ਼ੋਟੋ",
+    gloves: "ਦਸਤਾਨੇ", mask: "ਮਾਸਕ", goggles: "ਐਨਕ", boots: "ਬੂਟ", sleeves: "ਪੂਰੀਆਂ ਬਾਹਾਂ",
+    queued: "ਲੇਬਲ ਪੜ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ…",
+  },
+  te: {
+    scanPacket: "ప్యాకెట్ స్కాన్", scanBill: "బిల్లు స్కాన్", mixCheck: "మిశ్రమం తనిఖీ", sos: "SOS",
+    mySprays: "నా పిచికారీలు", nextSafe: "తదుపరి సురక్షిత కోత", pickCrop: "ఏ పంట?", pickPest: "ఏ పురుగు లేదా తెగులు?",
+    anyPest: "తెలియదు", takePhoto: "ఫోటో తీయండి", orPick: "లేదా మందు ఎంచుకోండి", typeQr: "ప్యాకెట్‌పై కోడ్ టైప్ చేయండి",
+    confirm: "ఇదేనా ఆ మందు?", yes: "అవును", no: "కాదు", why: "ఎందుకు?", better: "మెరుగైన ఎంపిక",
+    dose: "ఎంత పిచికారీ చేయాలి", area: "భూమి (ఎకరాలు)", pump: "పంపు (లీటర్లు)", save: "పిచికారీ సేవ్ చేయండి", saved: "సేవ్ అయింది",
+    safeFrom: "కోత సురక్షితం", back: "వెనుకకు", home: "హోమ్", checking: "తనిఖీ చేస్తోంది…", listen: "మళ్ళీ వినండి",
+    addProduct: "మందు జోడించండి", check: "తనిఖీ", remove: "తీసివేయండి", callNpic: "విష కేంద్రానికి కాల్", call108: "108 కి కాల్",
+    showCard: "డాక్టర్ కార్డు చూపించండి", firstAid: "ప్రథమ చికిత్స (లేబుల్ నుండి)", passport: "MRL పాస్‌పోర్ట్", plot: "పొలం",
+    state: "రాష్ట్రం", report: "ఈ మందుపై ఫిర్యాదు చేయండి", reported: "ఫిర్యాదు నమోదైంది. ధన్యవాదాలు.", offline: "ఆఫ్‌లైన్: సేవ్ చేసిన ఫలితం",
+    wearGear: "నా దగ్గర చేతి తొడుగులు, మాస్క్ ఉన్నాయి", weather: "పిచికారీ సమయం", speak: "మాట్లాడండి", noOcr: "QR కోడ్ స్కాన్ చేయండి లేదా మందు ఎంచుకోండి.",
+    total: "మొత్తం", saving: "సాధ్యమైన ఆదా", notApproved: "అనుమతి లేదు", sampleData: "నమూనా డేటా",
+    shop: "దుకాణం (ఐచ్ఛికం, నకిలీ బ్యాచ్‌లు పట్టుకోవడానికి)", next: "తదుపరి", pointCamera: "QR కోడ్ లేదా లేబుల్ వైపు కెమెరా పెట్టండి",
+    cameraOff: "కెమెరా అందుబాటులో లేదు. ఫోటో తీయండి నొక్కండి.", correct: "సరైనదేనా?", checkField: "దయచేసి ప్యాకెట్‌పై చూసి తనిఖీ చేయండి",
+    addThis: "ఈ మందును జోడించండి", submitted: "సమీక్షకు పంపబడింది. ధన్యవాదాలు.", brand: "బ్రాండ్ పేరు", chemical: "రసాయనం",
+    strength: "శాతం %", form: "రకం (EC, SL, WP…)", send: "పంపండి", addCalendar: "క్యాలెండర్‌కు జోడించండి",
+    reminderSet: "రిమైండర్ పెట్టబడింది", harvestToday: "ఈరోజు కోత సురక్షితం", reason: "ఏమి తప్పు?", photo: "ఫోటో",
+    gloves: "చేతి తొడుగులు", mask: "మాస్క్", goggles: "కళ్లజోడు", boots: "బూట్లు", sleeves: "పొడవు చేతులు",
+    queued: "లేబుల్ చదువుతోంది…",
   },
 };
 
 export const t = (lang, key) => (S[lang] && S[lang][key]) || S.en[key] || key;
 
-// Placeholder pictures. Replace with real crop and pest photos (playbook: "photos, not words").
+// Emoji are the fallback; drop real photos into public/img/crops/<crop>.jpg and public/img/pests/<pest>.jpg
+// (playbook: "picture grid of crops, then pests (photos, not words)") and the app uses them automatically.
 export const CROP_ICON = { rice: "🌾", basmati: "🍚", cotton: "☁️", tomato: "🍅", okra: "🫛" };
 export const PEST_ICON = {
   bollworm: "🐛", "fruit borer": "🐛", "stem borer": "🐛", "leaf folder": "🍃", jassid: "🦗", "brown plant hopper": "🦗",
@@ -70,4 +119,21 @@ export const CROP_NAME = {
   en: {}, hi: { rice: "धान", basmati: "बासमती", cotton: "कपास", tomato: "टमाटर" },
   mr: { rice: "भात", basmati: "बासमती", cotton: "कापूस", tomato: "टोमॅटो" },
   pa: { rice: "ਝੋਨਾ", basmati: "ਬਾਸਮਤੀ", cotton: "ਨਰਮਾ", tomato: "ਟਮਾਟਰ" },
+  te: { rice: "వరి", basmati: "బాస్మతి", cotton: "పత్తి", tomato: "టమాటా" },
 };
+export const PEST_NAME = {
+  en: {},
+  hi: { bollworm: "सुंडी", jassid: "हरा तेला", aphid: "माहू", whitefly: "सफ़ेद मक्खी", thrips: "थ्रिप्स", "brown plant hopper": "भूरा फुदका",
+    "stem borer": "तना छेदक", "leaf folder": "पत्ती लपेटक", blast: "झुलसा (ब्लास्ट)", "sheath blight": "शीथ ब्लाइट", "fruit borer": "फल छेदक",
+    "early blight": "अगेती झुलसा", "late blight": "पछेती झुलसा" },
+  mr: { bollworm: "बोंडअळी", jassid: "तुडतुडे", aphid: "मावा", whitefly: "पांढरी माशी", thrips: "फुलकिडे", "brown plant hopper": "तपकिरी तुडतुडे",
+    "stem borer": "खोडकिडा", "leaf folder": "पाने गुंडाळणारी अळी", blast: "करपा", "sheath blight": "आवरण करपा", "fruit borer": "फळ पोखरणारी अळी",
+    "early blight": "लवकर येणारा करपा", "late blight": "उशिरा येणारा करपा" },
+  pa: { bollworm: "ਸੁੰਡੀ", jassid: "ਹਰਾ ਤੇਲਾ", aphid: "ਚੇਪਾ", whitefly: "ਚਿੱਟੀ ਮੱਖੀ", thrips: "ਥ੍ਰਿਪਸ", "brown plant hopper": "ਭੂਰਾ ਟਿੱਡਾ",
+    "stem borer": "ਤਣਾ ਛੇਦਕ", "leaf folder": "ਪੱਤਾ ਲਪੇਟ ਸੁੰਡੀ", blast: "ਭੁਰੜ ਰੋਗ", "sheath blight": "ਸ਼ੀਥ ਬਲਾਈਟ", "fruit borer": "ਫਲ ਛੇਦਕ",
+    "early blight": "ਅਗੇਤਾ ਝੁਲਸ ਰੋਗ", "late blight": "ਪਿਛੇਤਾ ਝੁਲਸ ਰੋਗ" },
+  te: { bollworm: "కాయ తొలుచు పురుగు", jassid: "పచ్చ దోమ", aphid: "పేను బంక", whitefly: "తెల్ల దోమ", thrips: "తామర పురుగు",
+    "brown plant hopper": "సుడి దోమ", "stem borer": "కాండం తొలుచు పురుగు", "leaf folder": "ఆకు ముడత పురుగు", blast: "అగ్గి తెగులు",
+    "sheath blight": "పొట్ట కుళ్ళు తెగులు", "fruit borer": "కాయ తొలుచు పురుగు", "early blight": "ముందస్తు ఆకు మాడు", "late blight": "ఆలస్య ఆకు మాడు" },
+};
+export const pestName = (lang, p) => (PEST_NAME[lang] && PEST_NAME[lang][p]) || p;

@@ -69,7 +69,31 @@ Copy each field exactly as printed. Use null for anything not clearly present. D
 - formulation: the code after the percentage (EC, SL, WP, SC, WG, SG, SP, GR ...).
 - toxicity_colour: only if the text names the colour of the warning triangle.
 
-OCR text:
+Two worked examples (invented labels, for format only):
+
+Example 1 OCR:
+<example_ocr>
+KRISHIGUARD 17.8
+Imidacloprid 17.8% SL
+Reg. No. CIR-12345/2019-Imidacloprid (SL)-1234
+Batch No: KG24-117   Mfg. Date: 03/2025   Expiry: 02/2027
+Mfd by: Example Agro Ltd
+CAUTION  (yellow triangle)
+</example_ocr>
+Example 1 JSON:
+{{"brand": "KRISHIGUARD 17.8", "active_ingredient": "imidacloprid", "strength_pct": 17.8, "formulation": "SL", "batch": "KG24-117", "mfg_date": "2025-03", "exp_date": "2027-02", "reg_no": "CIR-12345/2019-Imidacloprid (SL)-1234", "manufacturer": "Example Agro Ltd", "toxicity_colour": "yellow"}}
+
+Example 2 OCR (worn pack, Hindi mixed in):
+<example_ocr>
+BLAST-X
+ट्राईसाइक्लाज़ोल 75% WP  Tricyclazole 75% WP
+बैच नं. BX-2 1
+</example_ocr>
+Example 2 JSON:
+{{"brand": "BLAST-X", "active_ingredient": "tricyclazole", "strength_pct": 75, "formulation": "WP", "batch": null, "mfg_date": null, "exp_date": null, "reg_no": null, "manufacturer": null, "toxicity_colour": null}}
+(The batch is null because "BX-2 1" is unclear; never guess.)
+
+Now the real pack. OCR text:
 <ocr>
 {text}
 </ocr>"""
@@ -79,7 +103,17 @@ List every product line exactly as written. Use null for anything not clearly pr
 - price: the line amount in rupees (after quantity), as a number.
 - total: the bill total if printed.
 
-OCR text:
+Example (invented bill, for format only):
+<example_ocr>
+Shri Example Krishi Seva Kendra
+1  Krishiguard 17.8 SL 250ml  x2   1440
+2  Blast-X 75 WP 120g              290
+   Total                          1730
+</example_ocr>
+Example JSON:
+{{"items": [{{"product_name": "Krishiguard 17.8 SL", "pack_size": "250ml", "quantity": 2, "price": 1440}}, {{"product_name": "Blast-X 75 WP", "pack_size": "120g", "quantity": 1, "price": 290}}], "total": 1730}}
+
+Now the real bill. OCR text:
 <ocr>
 {text}
 </ocr>"""

@@ -11,10 +11,11 @@ import re
 from .. import config
 from . import extract
 
-LANG_NAME = {"en": "English", "hi": "Hindi", "mr": "Marathi", "pa": "Punjabi"}
+LANG_NAME = {"en": "English", "hi": "Hindi", "mr": "Marathi", "pa": "Punjabi", "te": "Telugu"}
 
 PROMPT = """Explain this pesticide check result to a farmer with little schooling, in {language}, in at most 3 short sentences.
-Use ONLY the facts below. Do not add any number, date, dose, chemical, or advice that is not below. Do not give medical advice.
+Use ONLY the facts below: the rules that fired and the knowledge-base rows they were checked against.
+Do not add any number, date, dose, chemical, or advice that is not below. Do not give medical advice.
 
 Facts (JSON):
 {facts}"""
@@ -31,10 +32,12 @@ def template(fired: list[dict]) -> str:
     return " ".join(r.get("message") or r.get("message_en") or "" for r in fired).strip()
 
 
-def explain(fired: list[dict], lang: str = "en") -> dict:
+def explain(fired: list[dict], lang: str = "en", source_rows: list[dict] | None = None) -> dict:
+    """source_rows: label-claim / product rows retrieved from the knowledge base for this scan."""
     base = template(fired)
-    facts = [{"rule": r.get("id"), "message": r.get("message_en") or r.get("message"),
-              "source": r.get("source")} for r in fired]
+    facts = {"fired_rules": [{"rule": r.get("id"), "message": r.get("message_en") or r.get("message"),
+                              "source": r.get("source")} for r in fired],
+             "knowledge_base_rows": source_rows or []}
     data = extract._llm_json(PROMPT.format(language=LANG_NAME.get(lang, "English"),
                                            facts=json.dumps(facts, ensure_ascii=False)), SCHEMA)
     text = (data or {}).get("text") if isinstance(data, dict) else None

@@ -28,3 +28,6 @@ OFFLINE = os.getenv("DAWACHECK_OFFLINE", "0") == "1"  # skip all outbound calls 
 
 NEAR_EXPIRY_DAYS = int(os.getenv("NEAR_EXPIRY_DAYS", "30"))
 DEFAULT_TANK_L = float(os.getenv("DEFAULT_TANK_L", "15"))
+
+# Admin screen (add a ban, review farmer-added products). Disabled unless a token is set.
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")

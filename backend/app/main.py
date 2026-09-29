@@ -7,12 +7,12 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from . import config, i18n, models, normalise, schemas, seed
+from . import admin, config, geo, i18n, jobs, models, normalise, schemas, seed
 from .ai import explain as explain_mod
 from .ai import extract, ocr
 from .db import get_db
@@ -23,12 +23,15 @@ from .services import catalogue, dose, mix, radar, scan, sos, spray, storage, we
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     seed.ensure_seeded()
+    geo.init()
     yield
 
 
 app = FastAPI(title="DawaCheck API", version="0.1.0", lifespan=lifespan,
               description="AI reads, rules decide: every verdict comes from the rules engine and cites its source.")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.include_router(admin.router)
+app.include_router(admin.public)
 
 
 def _lang(lang: str | None) -> str:
@@ -56,7 +59,9 @@ async def post_scan(
     crop: str | None = Form(None), pest: str | None = Form(None), state: str | None = Form(None),
     lang: str = Form("en"), lat: str | None = Form(None), lon: str | None = Form(None),
     district: str | None = Form(None), shop: str | None = Form(None), user_id: str | None = Form(None),
-    area_acre: str | None = Form(None), tank_l: str | None = Form(None), db: Session = Depends(get_db),
+    area_acre: str | None = Form(None), tank_l: str | None = Form(None),
+    read_from_pack: bool = Form(False, description="true when re-checking after a label photo"),
+    db: Session = Depends(get_db),
 ):
     data = await image.read() if image else None
     if not any([data, qr_payload, ocr_text, product_id, fields]):
@@ -64,7 +69,49 @@ async def post_scan(
     return scan.scan(db, image=data, qr_payload=qr_payload, ocr_text=ocr_text, product_id=product_id,
                      fields=json.loads(fields) if fields else None, crop=crop, pest=pest, state=state,
                      lang=_lang(lang), lat=_f(lat), lon=_f(lon), district=district, shop=shop, user_id=user_id,
-                     area_acre=_f(area_acre), tank_l=_f(tank_l))
+                     area_acre=_f(area_acre), tank_l=_f(tank_l), read_from_pack=read_from_pack)
+
+
+@app.post("/scan/async")
+async def post_scan_async(
+    image: UploadFile = File(...), crop: str | None = Form(None), pest: str | None = Form(None),
+    state: str | None = Form(None), lang: str = Form("en"), lat: str | None = Form(None), lon: str | None = Form(None),
+    district: str | None = Form(None), shop: str | None = Form(None), user_id: str | None = Form(None),
+    area_acre: str | None = Form(None), tank_l: str | None = Form(None),
+):
+    """Queue a slow label-photo OCR scan; poll GET /jobs/{job_id}."""
+    kwargs = {"image": await image.read(), "crop": crop, "pest": pest, "state": state, "lang": _lang(lang),
+              "lat": _f(lat), "lon": _f(lon), "district": district, "shop": shop, "user_id": user_id,
+              "area_acre": _f(area_acre), "tank_l": _f(tank_l)}
+    return jobs.submit("scan", kwargs)
+
+
+@app.get("/jobs/{job_id}")
+def get_job(job_id: str):
+    st = jobs.status(job_id)
+    if st is None:
+        raise HTTPException(404, "unknown job")
+    return st
+
+
+@app.get("/reminder.ics")
+def get_reminder(plot_id: str, db: Session = Depends(get_db)):
+    """Calendar reminder for the plot's safe harvest date (adds to the phone's calendar)."""
+    safe = spray.plot_safe_date(db, plot_id)
+    if safe is None:
+        raise HTTPException(404, "No waiting period known for this plot")
+    rows = spray.sprays(db, plot_id)
+    crop = rows[-1].crop if rows else ""
+    stamp = safe.strftime("%Y%m%d")
+    ics = "\r\n".join([
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//DawaCheck//Spray reminder//EN", "BEGIN:VEVENT",
+        f"UID:dawacheck-{plot_id}-{stamp}@dawacheck", f"DTSTAMP:{stamp}T000000Z",
+        f"DTSTART;VALUE=DATE:{stamp}", f"SUMMARY:Safe to harvest {crop} (plot {plot_id})",
+        "DESCRIPTION:Waiting period after the last spray is over. From DawaCheck.",
+        "BEGIN:VALARM", "TRIGGER:PT8H", "ACTION:DISPLAY", "DESCRIPTION:Safe to harvest today", "END:VALARM",
+        "END:VEVENT", "END:VCALENDAR", ""])
+    return Response(ics, media_type="text/calendar",
+                    headers={"Content-Disposition": f'attachment; filename="dawacheck-{plot_id}.ics"'})
 
 
 @app.post("/bill")
@@ -223,8 +270,22 @@ def get_i18n(lang: str):
 
 
 @app.post("/explain")
-def post_explain(req: schemas.ExplainRequest):
-    return explain_mod.explain(req.fired, _lang(req.lang))
+def post_explain(req: schemas.ExplainRequest, db: Session = Depends(get_db)):
+    """Retrieve the knowledge-base rows behind this verdict, then rephrase grounded only on them."""
+    rows: list[dict] = []
+    p = catalogue.product_by_id(db, req.product_id) if req.product_id else None
+    if p is not None:
+        card = catalogue.product_card(p)
+        rows.append({"table": "products", "brand": card["brand"], "formulation": card["formulation"],
+                     "moa_group": card["moa_group"], "toxicity_colour": card["toxicity_colour"]})
+        crop_c = normalise.claim_crop(req.crop)
+        for c in catalogue.claims_for(db, p.formulation):
+            if crop_c is None or c["crop"] == crop_c:
+                rows.append({"table": "label_claims", **{k: c[k] for k in ("crop", "pest", "dose_form_ha", "unit",
+                                                                             "phi_days", "source_file", "page")}})
+    for opt in catalogue.approved_for(db, req.crop, req.pest, limit=3) if req.crop else []:
+        rows.append({"table": "approved_options", "formulation": opt["formulation"], "phi_days": opt["claim"]["phi_days"]})
+    return {**explain_mod.explain(req.fired, _lang(req.lang), rows), "source_rows": rows}
 
 
 config.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)

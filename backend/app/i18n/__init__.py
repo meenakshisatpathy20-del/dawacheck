@@ -5,8 +5,8 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-LANGS = ("en", "hi", "mr", "pa")
-TTS_LOCALE = {"en": "en-IN", "hi": "hi-IN", "mr": "mr-IN", "pa": "pa-IN"}
+LANGS = ("en", "hi", "mr", "pa", "te")
+TTS_LOCALE = {"en": "en-IN", "hi": "hi-IN", "mr": "mr-IN", "pa": "pa-IN", "te": "te-IN"}
 
 
 @lru_cache(maxsize=None)
@@ -41,4 +41,6 @@ def render_rule(fired: dict, lang: str = "en") -> str:
     variant = params.get("reason") or params.get("status")
     if variant and (f"{key}.{variant}" in table("en")):
         key = f"{key}.{variant}"
+    if "fields_keys" in params:
+        params = {**params, "fields": ", ".join(t(f"field.{k}", lang) for k in params["fields_keys"])}
     return t(key, lang, **params)

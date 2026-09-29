@@ -41,3 +41,6 @@ class BillItem(BaseModel):
 class ExplainRequest(BaseModel):
     fired: list[dict]
     lang: str = "en"
+    product_id: int | None = None
+    crop: str | None = None
+    pest: str | None = None

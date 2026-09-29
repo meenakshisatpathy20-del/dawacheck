@@ -32,10 +32,13 @@ def _best_line_match(db: Session, text: str):
     return sorted(best.values(), key=lambda t: -t[1])[:3]
 
 
-def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fields=None, image=None) -> dict:
+def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fields=None, image=None,
+             read_from_pack: bool = False) -> dict:
     """Turn whatever the farmer gave us into (product | ingredient + formulation) and extracted fields."""
     out = {"extracted": {}, "method": None, "candidates": [], "needs_confirmation": False,
-           "product": None, "ai": None, "formulation": None, "ocr_unavailable": False}
+           "product": None, "ai": None, "formulation": None, "ocr_unavailable": False,
+           "field_checks": {}, "mismatch": []}
+    lines: list[dict] = []
     ex: dict = {}
     if image and not qr_payload:
         qr_payload = qr.decode_image(image)
@@ -46,10 +49,12 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
         out["qr_hash"] = hashlib.sha256(qr_payload.encode()).hexdigest()
         out["qr_payload"] = qr_payload
     if image and not qr_payload and not ocr_text and not product_id:
-        ocr_text, engine = ocr.read_text(image)
+        lines, engine = ocr.read_lines(image)
         out["ocr_engine"] = engine
-        if ocr_text is None:
+        if engine is None:
             out["ocr_unavailable"] = True
+        else:
+            ocr_text = "\n".join(ln["text"] for ln in lines)
     if ocr_text:
         names = [a.name for a in catalogue.all_ingredients(db)]
         fields_x, method = extract.extract_label(ocr_text, names)
@@ -65,7 +70,7 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
     p = None
     if product_id:
         p = catalogue.product_by_id(db, int(product_id))
-        out["method"] = out["method"] or "confirmed"
+        out["method"] = out["method"] or ("confirmed+ocr" if read_from_pack else "confirmed")
     p = p or catalogue.product_by_qr(db, ex.get("qr_id")) or catalogue.product_by_reg(db, ex.get("reg_no"))
     if p is None and (ex.get("brand") or ex.get("active_ingredient") or ocr_text):
         cands = catalogue.match_products(db, ex.get("brand"), ex.get("active_ingredient"))
@@ -87,6 +92,14 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
     if p is not None:
         out["formulation"] = p.formulation
         out["ai"] = p.formulation.active_ingredient
+        # Guardrail: the strength and form read from the pack must match the registered formulation.
+        pct, ftype = ex.get("strength_pct"), ex.get("formulation")
+        if pct not in (None, "") and abs(float(pct) - p.formulation.strength_pct) > 0.051:
+            out["mismatch"].append("strength_pct")
+        if ftype and str(ftype).upper() != p.formulation.type:
+            out["mismatch"].append("formulation")
+        if out["mismatch"]:
+            out["needs_confirmation"] = True
     else:
         ai = catalogue.find_ai(db, ex.get("active_ingredient"))
         out["ai"] = ai
@@ -94,6 +107,23 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
             pct = ex.get("strength_pct")
             out["formulation"] = catalogue.find_formulation(db, ai, float(pct) if pct not in (None, "") else None,
                                                             ex.get("formulation"))
+    if lines and image:
+        out["field_checks"] = _field_checks(image, lines, ex)
+        # Low-confidence fields do not block the verdict; the app asks the farmer to check them.
+        out["check_fields"] = [k for k, fc in out["field_checks"].items() if fc["low"]]
+    return out
+
+
+CHECK_FIELDS = ("brand", "active_ingredient", "strength_pct", "batch", "mfg_date", "exp_date", "reg_no")
+
+
+def _field_checks(image: bytes, lines: list[dict], ex: dict) -> dict:
+    """Photo crop + OCR confidence for each field read from the pack."""
+    out = {}
+    for key, loc in ocr.locate_fields(lines, {k: ex.get(k) for k in CHECK_FIELDS}).items():
+        crop = ocr.crop(image, loc["box"])
+        url = storage.save_image(crop, "crops")[1] if crop else None
+        out[key] = {"value": str(ex[key]), "conf": loc["conf"], "low": loc["conf"] < ocr.LOW_CONFIDENCE, "crop_url": url}
     return out
 
 
@@ -123,6 +153,8 @@ def build_facts(db: Session, ident: dict, crop=None, pest=None, state=None, toda
         "claims": catalogue.claims_for(db, f),
         "state_bans": catalogue.state_bans_for(db, ai),
         "batch_signal": radar.signal_for(db, p.id if p else None, ex.get("batch")),
+        "read_from_pack": "ocr" in (ident.get("method") or ""),
+        "extracted_keys": {k for k, v in ex.items() if v not in (None, "")},
     }
 
 
@@ -154,11 +186,12 @@ def scan(db: Session, *, image: bytes | None = None, qr_payload: str | None = No
          state: str | None = None, lang: str = "en", lat: float | None = None, lon: float | None = None,
          district: str | None = None, shop: str | None = None, user_id: str | None = None,
          area_acre: float | None = None, tank_l: float | None = None, log: bool = True,
-         today: date | None = None) -> dict:
+         today: date | None = None, read_from_pack: bool = False) -> dict:
     image_hash = image_url = None
     if image:
         image_hash, image_url = storage.save_image(image, "pack")
-    ident = identify(db, product_id=product_id, qr_payload=qr_payload, ocr_text=ocr_text, fields=fields, image=image)
+    ident = identify(db, product_id=product_id, qr_payload=qr_payload, ocr_text=ocr_text, fields=fields, image=image,
+                     read_from_pack=read_from_pack)
     p, ai, f, ex = ident["product"], ident["ai"], ident["formulation"], ident["extracted"]
 
     if ident["ocr_unavailable"] and not p and not ai:
@@ -224,7 +257,10 @@ def scan(db: Session, *, image: bytes | None = None, qr_payload: str | None = No
         "verdict": verdict, "headline": headline, "speech": speech, "tts_locale": i18n.TTS_LOCALE.get(lang, "en-IN"),
         "fired": fired, "product": catalogue.product_card(p) if p else None,
         "identified": {"active_ingredient": ai.name if ai else None, "formulation": f.label if f else None,
-                       "method": ident["method"], "needs_confirmation": ident["needs_confirmation"]},
+                       "method": ident["method"], "needs_confirmation": ident["needs_confirmation"],
+                       "read_from_pack": facts["read_from_pack"], "ocr_engine": ident.get("ocr_engine")},
+        "field_checks": ident["field_checks"], "check_fields": ident.get("check_fields", []),
+        "mismatch": ident["mismatch"],
         "candidates": ident["candidates"], "extracted": {k: (str(v) if v is not None else None) for k, v in ex.items()},
         "claim": claim, "dose": dose_card, "phi": phi, "safety": safety_card(p, ai, lang),
         "suggestions": suggestions, "export_flags": export, "image_url": image_url,

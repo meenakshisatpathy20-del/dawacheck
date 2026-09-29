@@ -82,6 +82,8 @@ def _banned(f: dict, p: dict):
     ai = f.get("ai")
     if not ai or not (ai.get("banned") or ai.get("restricted")):
         return None
+    if ai.get("banned_from") and ai["banned_from"] > f["today"]:
+        return None  # ban announced but not yet in force
     return {
         "chemical": ai["name"],
         "status": "banned" if ai.get("banned") else "restricted",
@@ -104,6 +106,16 @@ def _near_expiry(f: dict, p: dict):
     if exp and f["today"] <= exp <= f["today"] + timedelta(days=p.get("days", 30)):
         return {"date": exp.isoformat()}
     return None
+
+
+@op("data_incomplete")
+def _incomplete(f: dict, p: dict):
+    """Label was photographed but key fields could not be read (playbook: yellow = 'data incomplete')."""
+    if not f.get("read_from_pack") or not (f.get("identified") or {}).get("product_matched"):
+        return None
+    got = f.get("extracted_keys") or set()
+    missing = [k for k in p.get("fields", []) if k not in got]
+    return {"fields_keys": missing} if missing else None
 
 
 @op("not_exists")

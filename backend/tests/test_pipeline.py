@@ -56,3 +56,64 @@ def test_parse_synthetic_major_uses(tmp_path):
     assert not problems
     review = parse_major_uses.validate(claims)
     assert review == []
+
+
+def _pdf_with(path: Path, story_fn):
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate
+    SimpleDocTemplate(str(path), pagesize=A4).build(story_fn())
+
+
+def test_parse_registered_products(tmp_path):
+    from reportlab.lib import colors
+    from reportlab.platypus import Table, TableStyle
+    from pipeline import parse_registry
+
+    grid = TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.black)])
+    pdf = tmp_path / "registered.pdf"
+    _pdf_with(pdf, lambda: [Table([
+        ["S. No.", "Name of Pesticide", "Registration No.", "Name of the Registrant", "Brand name"],
+        ["1", "Imidacloprid 17.8% SL", "CIR-111/2019", "Example Agro Ltd", "Examplo"],
+        ["2", "Tricyclazole 75% WP", "CIR-222/2020", "Sample Chem", ""],
+    ], style=grid)])
+    rows = parse_registry.parse_registered(extract_tables.extract(pdf), pdf.name)
+    assert [(r["ai"], r["pct"], r["type"], r["reg_no"]) for r in rows] == [
+        ("imidacloprid", 17.8, "SL", "CIR-111/2019"), ("tricyclazole", 75.0, "WP", "CIR-222/2020")]
+    assert rows[0]["brand"] == "Examplo" and rows[1]["brand"] is None
+
+
+def test_parse_banned_list(tmp_path):
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import Paragraph, Table, TableStyle
+    from pipeline import parse_registry
+
+    grid = TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.black)])
+    h = getSampleStyleSheet()["Heading3"]
+    pdf = tmp_path / "banned.pdf"
+    _pdf_with(pdf, lambda: [
+        Paragraph("A. Pesticides banned for manufacture, import and use", h),
+        Table([["S. No.", "Name of Pesticide"], ["1", "Endosulfan"], ["2", "Phorate"]], style=grid),
+        Paragraph("B. Pesticides restricted for use in the country", h),
+        Table([["S. No.", "Name of Pesticide", "Restriction"], ["1", "Monocrotophos", "Not for use on vegetables"]], style=grid),
+    ])
+    rows = parse_registry.parse_banned(extract_tables.extract(pdf), pdf.name)
+    assert [(r["name"], r["status"]) for r in rows] == [
+        ("endosulfan", "banned"), ("phorate", "banned"), ("monocrotophos", "restricted")]
+    assert rows[2]["note"] == "Not for use on vegetables"
+
+
+def test_import_eu_mrl(tmp_path):
+    import json
+    from pipeline import import_eu_mrl
+
+    csv_path = tmp_path / "eu.csv"
+    csv_path.write_text("Pesticide residue,Product,MRL (mg/kg)\n"
+                        "Tricyclazole,Rice,0.01*\nBuprofezin,Rice,0.01*\nAzoxystrobin,Rice,5\n"
+                        "Imidacloprid,Tomatoes,0.5\nChlorpyrifos,Tomatoes,0.01*\n")
+    rows = import_eu_mrl.parse(csv_path)
+    assert {(r["crop"], r["ai"]) for r in rows} == {("rice", "tricyclazole"), ("rice", "buprofezin"),
+                                                    ("tomato", "chlorpyrifos")}
+    flags = tmp_path / "flags.json"
+    flags.write_text(json.dumps({"items": [{"crop": "rice", "market": "EU", "ai": "tricyclazole", "note": "x"}]}))
+    assert import_eu_mrl.merge(rows, flags) == {"added": 2, "total": 3}

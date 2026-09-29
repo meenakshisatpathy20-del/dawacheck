@@ -175,6 +175,7 @@ def ai_dict(ai: models.ActiveIngredient | None) -> dict | None:
     if ai is None:
         return None
     return {"name": ai.name, "banned": ai.banned, "restricted": ai.restricted, "ban_note": ai.ban_note,
+            "banned_from": ai.banned_from,
             "source_url": ai.source_url, "group": ai.irac_frac_group, "scheme": ai.moa_scheme,
             "toxicity_colour": ai.toxicity_colour, "chem_class": ai.chem_class}
 
