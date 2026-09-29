@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 from datetime import date
 
-from rapidfuzz import fuzz
+from rapidfuzz import fuzz, utils
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -26,7 +26,7 @@ def _best_line_match(db: Session, text: str):
     best: dict[int, tuple[models.Product, float]] = {}
     for line in [ln.strip() for ln in (text or "").splitlines() if len(ln.strip()) >= 3][:40]:
         for p in brands:
-            s = fuzz.WRatio(line, p.brand)
+            s = fuzz.WRatio(line, p.brand, processor=utils.default_process)
             if s > best.get(p.id, (None, 0))[1]:
                 best[p.id] = (p, s)
     return sorted(best.values(), key=lambda t: -t[1])[:3]
@@ -52,10 +52,23 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
         lines, engine = ocr.read_lines(image)
         out["ocr_engine"] = engine
         if engine is None:
-            out["ocr_unavailable"] = True
+            # No OCR engine on this host (e.g. serverless): let the vision model read the photo.
+            names = [a.name for a in catalogue.all_ingredients(db)]
+            vision = extract.extract_label_from_image(image, names)
+            if vision is None:
+                out["ocr_unavailable"] = True
+            else:
+                fields_v, _ = vision
+                ocr_text = fields_v.pop("_text", "")
+                for k, v in fields_v.items():
+                    if v is not None and k not in ex:
+                        ex[k] = v
+                out["ocr_engine"] = "vision"
+                out["method"] = "ocr:vision"
+                out["vision_read"] = True
         else:
             ocr_text = "\n".join(ln["text"] for ln in lines)
-    if ocr_text:
+    if ocr_text and not out.get("vision_read"):
         names = [a.name for a in catalogue.all_ingredients(db)]
         fields_x, method = extract.extract_label(ocr_text, names)
         for k, v in fields_x.items():

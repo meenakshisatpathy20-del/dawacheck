@@ -57,6 +57,10 @@ def submit(kind: str, kwargs: dict) -> dict:
         job = q.enqueue(fn, kwargs, job_timeout=120, result_ttl=3600)
         return {"job_id": f"rq:{job.id}", "backend": "redis"}
     jid = f"local:{uuid.uuid4().hex}"
+    if config.SERVERLESS:
+        # No shared memory between serverless instances: a later poll may reach another one,
+        # so run the job inside this request and hand the result straight back.
+        return {"job_id": jid, "backend": "inline", "status": "done", "result": fn(kwargs)}
     _local[jid] = _pool.submit(fn, kwargs)
     return {"job_id": jid, "backend": "local"}
 

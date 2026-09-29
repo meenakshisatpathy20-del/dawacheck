@@ -1,0 +1,40 @@
+# Render Blueprint: the full playbook stack on managed services (New > Blueprint > this repo).
+# Web API (Docker image with Tesseract), OCR worker (RQ), Redis (Key Value), PostgreSQL.
+# After the first deploy: open the database's shell and run `CREATE EXTENSION postgis;`
+# (the app also tries this on start), then set ADMIN_TOKEN and ANTHROPIC_API_KEY.
+services:
+  - type: web
+    name: dawacheck-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: dawacheck-db, property: connectionString}
+      - key: REDIS_URL
+        fromService: {type: keyvalue, name: dawacheck-redis, property: connectionString}
+      - key: USER_HASH_SALT
+        generateValue: true
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+  - type: worker
+    name: dawacheck-ocr-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: sh -c "rq worker ocr --url $REDIS_URL"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: dawacheck-db, property: connectionString}
+      - key: REDIS_URL
+        fromService: {type: keyvalue, name: dawacheck-redis, property: connectionString}
+      - key: ANTHROPIC_API_KEY
+        sync: false
+  - type: keyvalue
+    name: dawacheck-redis
+    ipAllowList: []
+
+databases:
+  - name: dawacheck-db
+    databaseName: dawacheck

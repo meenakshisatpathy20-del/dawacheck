@@ -20,6 +20,10 @@ def save_image(data: bytes, kind: str = "pack") -> tuple[str, str]:
             return digest, f"s3://{config.S3_BUCKET}/{key}"
         except Exception:
             pass  # fall through to local disk so the scan still works
+    if config.INLINE_IMAGES and len(data) <= 200_000:
+        import base64
+
+        return digest, "data:image/jpeg;base64," + base64.b64encode(data).decode()
     path = config.UPLOAD_DIR / key
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)

@@ -1,6 +1,8 @@
 // API client with an offline cache of verdicts for products already scanned
 // (playbook: "works offline for scans already cached").
-const BASE = import.meta.env.VITE_API_URL || "";
+const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+// Photos stored by the backend ("/uploads/...") live on the backend's host when it is separate.
+export const fileUrl = (u) => (u && u.startsWith("/uploads") ? BASE + u : u);
 const CACHE_KEY = "dc.cache.v1";
 
 function readCache() {
@@ -26,12 +28,31 @@ const form = (obj) => {
   return f;
 };
 
+// Shrink photos on the phone before upload: faster on patchy rural data, and under
+// hosting request limits (Vercel: 4.5 MB). OCR works fine at 1600 px on the long side.
+async function shrink(blob, maxSide = 1600, quality = 0.85) {
+  if (!(blob instanceof Blob) || !blob.type.startsWith("image/") || blob.size < 600_000) return blob;
+  try {
+    const bmp = await createImageBitmap(blob);
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise((res) => c.toBlob((b) => res(b || blob), "image/jpeg", quality));
+  } catch { return blob; }
+}
+async function shrinkAll(params) {
+  const out = { ...params };
+  for (const [k, v] of Object.entries(out)) if (v instanceof Blob) out[k] = await shrink(v);
+  return out;
+}
+
 const scanKey = (p) => ["scan", p.product_id, p.crop, p.pest, p.state, p.area_acre, p.lang].join("|");
 
 export const api = {
   async scan(params) {
     try {
-      const r = await request("/scan", { method: "POST", body: form(params) });
+      const r = await request("/scan", { method: "POST", body: form(await shrinkAll(params)) });
       if (r.status === "ok" && r.product) {
         const c = readCache();
         c[scanKey({ ...params, product_id: r.product.id })] = { ...r, cached_at: new Date().toISOString() };
@@ -48,7 +69,8 @@ export const api = {
   },
   // Label photos go through the OCR queue (Redis worker in production); poll until done.
   async scanPhoto(params, onQueued) {
-    const job = await request("/scan/async", { method: "POST", body: form(params) });
+    const job = await request("/scan/async", { method: "POST", body: form(await shrinkAll(params)) });
+    if (job.status === "done") return job.result; // serverless: the job already ran in the request
     onQueued && onQueued(job);
     for (let i = 0; i < 120; i++) {
       const st = await request(`/jobs/${encodeURIComponent(job.job_id)}`);
@@ -58,9 +80,9 @@ export const api = {
     }
     throw new Error("OCR timed out");
   },
-  submitProduct: (params) => request("/products/submit", { method: "POST", body: form(params) }),
+  submitProduct: async (params) => request("/products/submit", { method: "POST", body: form(await shrinkAll(params)) }),
   reminderUrl: (plot) => `${BASE}/reminder.ics?plot_id=${encodeURIComponent(plot)}`,
-  bill: (params) => request("/bill", { method: "POST", body: form(params) }),
+  bill: async (params) => request("/bill", { method: "POST", body: form(await shrinkAll(params)) }),
   mix: (product_ids, lang) => request("/mix-check", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product_ids, lang }),
   }),
@@ -72,7 +94,7 @@ export const api = {
   rotation: (plot, lang) => request(`/rotation?plot_id=${encodeURIComponent(plot)}&lang=${lang}`),
   sos: (q) => request(`/sos?${new URLSearchParams(Object.entries(q).filter(([, v]) => v != null && v !== ""))}`),
   weather: (q) => request(`/weather-window?${new URLSearchParams(Object.entries(q).filter(([, v]) => v != null && v !== ""))}`),
-  report: (params) => request("/report", { method: "POST", body: form(params) }),
+  report: async (params) => request("/report", { method: "POST", body: form(await shrinkAll(params)) }),
   radar: (district) => request(`/radar${district ? `?district=${encodeURIComponent(district)}` : ""}`),
   batch: (batch, product_id) => request(`/radar/batch?batch=${encodeURIComponent(batch)}${product_id ? `&product_id=${product_id}` : ""}`),
   explain: (fired, lang, ctx = {}) => request("/explain", {
@@ -102,7 +124,7 @@ export const api = {
   },
 };
 
-export const fpoPlots = () => fetch((import.meta.env.VITE_API_URL || "") + "/fpo/plots").then((r) => r.json());
+export const fpoPlots = () => fetch(BASE + "/fpo/plots").then((r) => r.json());
 
 // Admin screen (section 18): token kept only in this browser's session.
 const adminHeaders = (json) => ({ "X-Admin-Token": sessionStorage.getItem("dc.admin") || "",

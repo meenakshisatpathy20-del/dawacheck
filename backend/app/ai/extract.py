@@ -129,7 +129,8 @@ def llm_enabled() -> bool:
     return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN"))
 
 
-def _llm_json(prompt: str, schema: dict) -> dict | None:
+def _llm_json(prompt, schema: dict) -> dict | None:
+    """prompt: a string, or a list of content blocks (e.g. an image block + a text block)."""
     if not llm_enabled():
         return None
     try:
@@ -142,7 +143,7 @@ def _llm_json(prompt: str, schema: dict) -> dict | None:
             model=config.ANTHROPIC_MODEL,
             max_tokens=4000,
             output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": prompt}],  # str or list of content blocks
             # Server-side refusal fallback: routes a declined request to another model.
             extra_headers={"anthropic-beta": "server-side-fallback-2026-07-01"},
             extra_body={"fallbacks": "default"},
@@ -294,3 +295,76 @@ def extract_bill(text: str) -> tuple[dict, str]:
             isinstance(i, dict) and i.get("product_name") for i in data["items"]):
         return data, "llm"
     return regex_bill(text), "regex"
+
+
+VISION_PROMPT = """This is a photo of an Indian pesticide pack. Read the printed text and fill every field exactly as printed.
+Use null for anything you cannot read clearly. Do not guess, infer, or add advice.
+- active_ingredient: the chemical name only, in English (e.g. "imidacloprid"), no percentage.
+- strength_pct: the number before % (e.g. 17.8).
+- formulation: the code after the percentage (EC, SL, WP, SC, WG, SG, SP, GR ...).
+- toxicity_colour: the colour of the warning triangle / diamond if one is printed.
+Also copy every line of printed text you can read into the field "lines"."""
+
+VISION_SCHEMA = {**LABEL_SCHEMA, "required": [*LABEL_SCHEMA["required"], "lines"],
+                 "properties": {**LABEL_SCHEMA["properties"], "lines": {"type": "array", "items": {"type": "string"}}}}
+
+
+def _media_type(data: bytes) -> str | None:
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    return None
+
+
+def extract_label_from_image(image: bytes, known_ingredients: list[str] | None = None) -> tuple[dict, str] | None:
+    """Cloud-OCR fallback (playbook section 10) for hosts without an OCR engine, e.g. serverless.
+    The model only reads the photo; its output is schema-validated and re-checked by the regex
+    extractor on the lines it read, exactly like the OCR path. Returns None if unavailable."""
+    import base64
+
+    mt = _media_type(image)
+    if mt is None or not llm_enabled():
+        return None
+    content = [{"type": "image", "source": {"type": "base64", "media_type": mt,
+                                            "data": base64.b64encode(image).decode()}},
+               {"type": "text", "text": VISION_PROMPT}]
+    data = _llm_json(content, VISION_SCHEMA)
+    if not isinstance(data, dict):
+        return None
+    lines = [str(x) for x in data.pop("lines", []) if x]
+    if not _valid_label(data):
+        return None
+    rx = regex_label("\n".join(lines), known_ingredients)
+    for k in ("batch", "mfg_date", "exp_date", "strength_pct", "formulation", "reg_no"):
+        if rx.get(k) is not None:
+            data[k] = rx[k]
+    data["_text"] = "\n".join(lines)
+    return data, "vision"
+
+
+BILL_VISION_PROMPT = """This is a photo of a shop bill for farm inputs in India (printed or handwritten).
+List every product line exactly as written. Use null for anything you cannot read clearly. Do not guess.
+- price: the line amount in rupees (after quantity), as a number.
+- total: the bill total if printed."""
+
+
+def extract_bill_from_image(image: bytes) -> tuple[dict, str] | None:
+    """Cloud-OCR fallback for bill photos on hosts without an OCR engine."""
+    import base64
+
+    mt = _media_type(image)
+    if mt is None or not llm_enabled():
+        return None
+    content = [{"type": "image", "source": {"type": "base64", "media_type": mt,
+                                            "data": base64.b64encode(image).decode()}},
+               {"type": "text", "text": BILL_VISION_PROMPT}]
+    data = _llm_json(content, BILL_SCHEMA)
+    if isinstance(data, dict) and isinstance(data.get("items"), list) and all(
+            isinstance(i, dict) and i.get("product_name") for i in data["items"]):
+        return data, "vision"
+    return None

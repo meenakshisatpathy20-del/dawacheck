@@ -44,14 +44,17 @@ def check_bill(db: Session, *, image: bytes | None = None, ocr_text: str | None 
                crop: str | None = None, pest: str | None = None, state: str | None = None, lang: str = "en",
                district: str | None = None, user_id: str | None = None) -> dict:
     method = "confirmed"
+    bill_total = None
     if image:
         storage.save_image(image, "bill")
         if not ocr_text and not items:
             ocr_text, _ = ocr.read_text(image)
             if ocr_text is None:
-                return {"status": "need_input", "reason": "ocr_unavailable",
-                        "message": "No text reader on the server. Send on-device OCR text or type the items."}
-    bill_total = None
+                vision = extract.extract_bill_from_image(image)  # no OCR engine here: vision model reads it
+                if vision is None:
+                    return {"status": "need_input", "reason": "ocr_unavailable",
+                            "message": "No text reader on the server. Send on-device OCR text or type the items."}
+                items, bill_total, method = vision[0]["items"], vision[0].get("total"), "vision"
     if items is None:
         parsed, method = extract.extract_bill(ocr_text or "")
         items, bill_total = parsed["items"], parsed.get("total")

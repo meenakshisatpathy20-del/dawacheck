@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from rapidfuzz import fuzz, process
+from rapidfuzz import fuzz, process, utils
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -29,7 +29,7 @@ def find_ai(db: Session, text: str | None) -> models.ActiveIngredient | None:
         choices[a.name] = a
         for s in a.synonyms or []:
             choices[s.lower()] = a
-    hit = process.extractOne(name, list(choices), scorer=fuzz.WRatio)
+    hit = process.extractOne(name, list(choices), scorer=fuzz.WRatio, processor=utils.default_process)
     return choices[hit[0]] if hit and hit[1] >= 88 else None
 
 
@@ -70,7 +70,7 @@ def match_products(db: Session, brand: str | None, ai_text: str | None = None, l
     ai = normalise.ingredient(ai_text) if ai_text else None
     scored = []
     for p in products:
-        s = fuzz.WRatio(brand, p.brand) if brand else 0
+        s = fuzz.WRatio(brand, p.brand, processor=utils.default_process) if brand else 0  # case-insensitive
         if ai and p.formulation.active_ingredient.name == ai:
             s = min(100, s + 10) if brand else 70
         scored.append((p, s))

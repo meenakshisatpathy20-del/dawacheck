@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { api, reminders } from "../api.js";
+import { api, fileUrl, reminders } from "../api.js";
 import { useStore } from "../store.jsx";
 import { t } from "../strings.js";
 import { speak, speakVerdict, stopSpeaking, verdictTone } from "../voice.js";
@@ -41,7 +41,7 @@ function Confirm({ r, onYes }) {
   const nav = useNavigate();
   const scan = useScan();
   const [edits, setEdits] = useState({});
-  const photo = r.local_photo || r.image_url;
+  const photo = r.local_photo || fileUrl(r.image_url);
   const checks = Object.entries(r.field_checks || {});
   const low = new Set([...(r.check_fields || []), ...(r.mismatch || [])]);
 
@@ -71,7 +71,7 @@ function Confirm({ r, onYes }) {
         <div className="card">
           {checks.map(([k, fc]) => (
             <div key={k} className={`crop-row ${low.has(k) ? "low" : ""}`}>
-              {fc.crop_url ? <img src={fc.crop_url} alt={k} /> : <span />}
+              {fc.crop_url ? <img src={fileUrl(fc.crop_url)} alt={k} /> : <span />}
               <label className="small">{k.replace("_", " ")}{low.has(k) && <> · <b style={{ color: "var(--yellow)" }}>{t(s.lang, "checkField")}</b></>}
                 <input className="lang" style={{ width: "100%" }} defaultValue={fc.value}
                   onChange={(e) => setEdits({ ...edits, [k]: e.target.value })} /></label>

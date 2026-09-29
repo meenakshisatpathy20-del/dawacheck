@@ -4,9 +4,25 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]  # repo root
 
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{ROOT / 'backend' / 'dawacheck.db'}")
+# On Vercel (and other serverless hosts) only /tmp is writable, and each instance has its own.
+SERVERLESS = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+_WRITABLE = Path("/tmp") if SERVERLESS else ROOT / "backend"
+
+
+def _db_url(url: str) -> str:
+    """Hosted Postgres (Neon, Supabase, Vercel Marketplace) hands out postgres:// URLs; use psycopg 3."""
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
+DATABASE_URL = _db_url(os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or f"sqlite:///{_WRITABLE / 'dawacheck.db'}")
 SEED_DIR = Path(os.getenv("SEED_DIR", ROOT / "data" / "seed"))
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", ROOT / "backend" / "uploads"))
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _WRITABLE / "uploads"))
+# Serverless instances do not share /tmp, so small images (field crops) are returned inline as data URLs.
+INLINE_IMAGES = os.getenv("INLINE_IMAGES", "1" if SERVERLESS else "0") == "1"
 REDIS_URL = os.getenv("REDIS_URL", "")
 
 # S3 / MinIO for pack and bill photos. Local disk is used when S3_ENDPOINT is empty.

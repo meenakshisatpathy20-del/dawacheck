@@ -20,5 +20,5 @@ COPY pipeline/ pipeline/
 COPY --from=web /web/dist frontend/dist
 WORKDIR /srv/backend
 EXPOSE 8000
-HEALTHCHECK --interval=15s --timeout=5s --retries=5 CMD python -c "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"
-CMD ["sh", "-c", "python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+HEALTHCHECK --interval=15s --timeout=5s --retries=5 CMD python -c "import os,urllib.request;urllib.request.urlopen('http://localhost:%s/health' % os.getenv('PORT','8000'))"
+CMD ["sh", "-c", "python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

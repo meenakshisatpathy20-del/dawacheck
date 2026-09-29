@@ -21,6 +21,8 @@ A verdict never says "fake". It says "not found in the government registry" or "
 
 ## Quick start
 
+**Deploying (Vercel, Render or Docker): see [`docs/DEPLOY.md`](docs/DEPLOY.md).**
+
 ### One command (Docker)
 ```bash
 cp .env.example .env          # optional: ANTHROPIC_API_KEY for LLM extraction, ADMIN_TOKEN for the admin screen
@@ -40,7 +42,7 @@ On stage with unreliable Wi-Fi set `DAWACHECK_OFFLINE=1`: no external calls; the
 
 ### Tests
 ```bash
-cd backend && python -m pytest -q                      # 99 tests
+cd backend && python -m pytest -q                      # 105 tests
 TEST_DATABASE_URL=postgresql+psycopg://user@host/db python -m pytest -q   # same suite on PostgreSQL + PostGIS
 ```
 Covers every rule, every endpoint, dose maths, extraction, a real Tesseract photo-OCR run, the PDF parsers, the admin flows, the job queue, the impact metrics and the 30 knowledge-base questions.

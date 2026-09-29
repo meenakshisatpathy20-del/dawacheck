@@ -193,10 +193,21 @@ def reset_and_seed(demo_scans: bool = True) -> dict:
 
 
 def ensure_seeded() -> None:
-    Base.metadata.create_all(engine)
+    """Create tables and load the seed once. Safe when several serverless instances start together:
+    the loser of the race hits a unique-name conflict and simply uses the winner's data."""
+    from sqlalchemy.exc import IntegrityError, OperationalError, ProgrammingError
+
+    try:
+        Base.metadata.create_all(engine)
+    except (IntegrityError, OperationalError, ProgrammingError):
+        pass  # another instance created the tables at the same moment
     with SessionLocal() as db:
-        if db.scalar(select(models.ActiveIngredient).limit(1)) is None:
+        if db.scalar(select(models.ActiveIngredient).limit(1)) is not None:
+            return
+        try:
             load_all(db)
+        except IntegrityError:
+            db.rollback()
 
 
 if __name__ == "__main__":

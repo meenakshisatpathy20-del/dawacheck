@@ -5,7 +5,7 @@ import "leaflet.heat";
 import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { Link, NavLink, Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
-import { admin, api, fpoPlots } from "../api.js";
+import { admin, api, fileUrl, fpoPlots } from "../api.js";
 
 const SIGNAL = {
   date_conflict: "Same batch, different dates", cloned_qr: "QR seen far apart", not_in_registry: "Not in registry",
@@ -134,7 +134,7 @@ function BatchDetail() {
       <div className="card"><h3>Farmer reports</h3>
         {d.reports.length === 0 ? <p className="muted">None</p> : (
           <ul className="list">{d.reports.map((r, i) => (
-            <li key={i}>{r.photo_url && <a href={r.photo_url} target="_blank" rel="noreferrer"><img src={r.photo_url} alt="report" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8 }} /></a>}
+            <li key={i}>{r.photo_url && <a href={fileUrl(r.photo_url)} target="_blank" rel="noreferrer"><img src={fileUrl(r.photo_url)} alt="report" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8 }} /></a>}
               <span className="spacer">{r.at.slice(0, 10)}: {r.reason} <span className={`pill ${r.status === "confirmed" ? "red" : r.status === "dismissed" ? "grey" : "yellow"}`}>{r.status}</span></span>
               {sessionStorage.getItem("dc.admin") && r.status === "open" && <>
                 <button className="btn secondary" onClick={async () => { await admin.setReport(r.id, "confirmed"); setD(await api.batch(params.get("batch"), params.get("product_id"))); }}>Confirm after inspection</button>
@@ -253,7 +253,7 @@ function Admin() {
           {subs.length === 0 && <p className="muted">None pending.</p>}
           <table><tbody>{subs.map((x) => (
             <tr key={x.id}>
-              <td>{x.photo_url ? <a href={x.photo_url} target="_blank" rel="noreferrer"><img src={x.photo_url} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }} /></a> : "no photo"}</td>
+              <td>{x.photo_url ? <a href={fileUrl(x.photo_url)} target="_blank" rel="noreferrer"><img src={fileUrl(x.photo_url)} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }} /></a> : "no photo"}</td>
               <td><b>{x.brand}</b><div className="small">{x.active_ingredient} {x.strength_pct}% {x.formulation} · {x.reg_no || "no reg. no."}</div></td>
               <td><button className="btn" onClick={() => act(() => admin.approve(x.id, {}), "Approved")}>Approve</button>{" "}
                 <button className="btn secondary" onClick={() => act(() => admin.reject(x.id, "rejected on review"), "Rejected")}>Reject</button></td>
