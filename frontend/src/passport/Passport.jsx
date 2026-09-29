@@ -7,7 +7,7 @@ export default function Passport() {
   const { plotId } = useParams();
   const [p, setP] = useState(null);
   const [err, setErr] = useState(null);
-  useEffect(() => { api.passport(plotId).then(setP).catch((e) => setErr(e.message)); }, [plotId]);
+  useEffect(() => { api.passport(plotId, true).then(setP).catch((e) => setErr(e.message)); }, [plotId]);
 
   if (err) return <div className="phone"><div className="error">{err}</div></div>;
   if (!p) return <div className="phone"><div className="card">Loading…</div></div>;

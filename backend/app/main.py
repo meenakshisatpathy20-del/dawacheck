@@ -175,11 +175,41 @@ def post_spray(req: schemas.SprayRequest, db: Session = Depends(get_db)):
 
 
 @app.get("/passport/{plot_id}")
-def get_passport(plot_id: str, db: Session = Depends(get_db)):
+def get_passport(plot_id: str, view: bool = False, db: Session = Depends(get_db)):
+    """view=true is sent by the public passport page (a buyer opened it), not by the farmer's app."""
     p = spray.passport(db, plot_id)
     if p is None:
         raise HTTPException(404, "No sprays recorded for this plot")
+    if view:
+        db.add(models.PassportView(plot_id=plot_id))
+        db.commit()
     return p
+
+
+@app.get("/metrics")
+def get_metrics(db: Session = Depends(get_db)):
+    """Impact metrics (playbook section 17)."""
+    from sqlalchemy import func
+    scans_n = db.scalar(select(func.count(models.Scan.id))) or 0
+    by_verdict = dict(db.execute(select(models.Scan.verdict, func.count(models.Scan.id)).group_by(models.Scan.verdict)).all())
+    bills = db.execute(select(func.count(models.BillCheck.id), func.coalesce(func.sum(models.BillCheck.saving), 0),
+                              func.count(func.distinct(models.BillCheck.user_hash)))).one()
+    sprays_n = db.scalar(select(func.count(models.SprayLog.id))) or 0
+    sprays_safe = db.scalar(select(func.count(models.SprayLog.id)).where(models.SprayLog.safe_harvest_date.is_not(None))) or 0
+    flagged = db.scalar(select(func.count(func.distinct(models.BatchSignal.batch))).where(models.BatchSignal.score >= 1.0)) or 0
+    confirmed = db.scalar(select(func.count(models.Report.id)).where(models.Report.status == "confirmed")) or 0
+    passports = db.scalar(select(func.count(func.distinct(models.SprayLog.plot_id)))) or 0
+    views = db.scalar(select(func.count(models.PassportView.id))) or 0
+    return {
+        "scans": scans_n,
+        "red_share": round(by_verdict.get("red", 0) / scans_n, 3) if scans_n else 0,
+        "yellow_share": round(by_verdict.get("yellow", 0) / scans_n, 3) if scans_n else 0,
+        "bills_checked": bills[0], "money_saved_rs": round(float(bills[1])),
+        "money_saved_per_farmer_rs": round(float(bills[1]) / bills[2]) if bills[2] else 0,
+        "sprays_logged": sprays_n, "sprays_with_safe_date": sprays_safe,
+        "suspicious_batches_flagged": flagged, "reports_confirmed_by_officers": confirmed,
+        "plots_with_passport": passports, "passport_views_by_buyers": views,
+    }
 
 
 @app.get("/fpo/plots")

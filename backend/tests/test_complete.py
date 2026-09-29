@@ -165,3 +165,33 @@ def test_enrichment_and_catalogue_sizes(client):
             models.ActiveIngredient.irac_frac_group.is_not(None)))
     assert grouped >= 60
     assert len(client.get("/products").json()) >= 50
+
+
+def test_impact_metrics_and_report_confirmation(client, pid):
+    items = [{"product_name": "Kavach Imida", "pack_size": "250 ml", "quantity": 1, "price": 720}]
+    client.post("/bill", data={"items": json.dumps(items), "crop": "cotton", "user_id": "m1"})
+    client.post("/spray-log", json={"plot_id": "MET-1", "crop": "cotton", "product_id": pid("Emacure"),
+                                    "spray_date": "2026-09-01", "pest": "bollworm"})
+    client.get("/passport/MET-1", params={"view": "true"})
+    s = client.post("/scan", data={"product_id": pid("Cyper 10"), "fields": json.dumps({"batch": "CY-1"})}).json()
+    rep = client.post("/report", data={"scan_id": s["scan_id"], "reason": "smell"}).json()
+    assert client.put(f"/admin/reports/{rep['report_id']}", headers=ADMIN, data={"status": "confirmed"}).json()["status"] == "confirmed"
+    m = client.get("/metrics").json()
+    assert m["bills_checked"] >= 1 and m["money_saved_rs"] > 0 and m["money_saved_per_farmer_rs"] > 0
+    assert m["sprays_with_safe_date"] >= 1 and m["passport_views_by_buyers"] >= 1
+    assert m["reports_confirmed_by_officers"] >= 1 and 0 < m["red_share"] < 1
+
+
+@pytest.mark.skipif(shutil.which("tesseract") is None, reason="tesseract not installed")
+def test_accuracy_harness_runs(tmp_path):
+    import subprocess
+    import sys
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    subprocess.run([sys.executable, str(root / "scripts" / "make_synthetic_packs.py"), str(tmp_path)], check=True)
+    sys.path.insert(0, str(root / "scripts"))
+    import accuracy_report
+    packs = accuracy_report.run_packs(tmp_path / "packs")
+    bills = accuracy_report.run_bills(tmp_path / "bills")
+    assert packs["fields_acc"] >= 0.9 and packs["top1_acc"] >= 0.9 and bills["acc"] >= 0.9
+    assert "Key fields exact" in accuracy_report.report(packs, bills)

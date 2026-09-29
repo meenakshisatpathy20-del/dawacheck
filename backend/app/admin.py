@@ -165,6 +165,18 @@ def reject(sid: int, note: str = Form(""), db: Session = Depends(get_db)):
     return _submission(s)
 
 
+@router.put("/reports/{report_id}")
+def set_report_status(report_id: int, status: str = Form(..., pattern="^(open|confirmed|dismissed)$"),
+                      db: Session = Depends(get_db)):
+    """An officer confirms or dismisses a farmer report after inspection (impact metric)."""
+    r = db.get(models.Report, report_id)
+    if r is None:
+        raise HTTPException(404, "no such report")
+    r.status = status
+    db.commit()
+    return {"id": r.id, "status": r.status}
+
+
 @public.post("/products/submit")
 async def submit_product(
     brand: str = Form(..., min_length=2), active_ingredient: str | None = Form(None),

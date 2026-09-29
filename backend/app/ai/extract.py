@@ -201,7 +201,8 @@ def regex_label(text: str, known_ingredients: list[str] | None = None) -> dict:
     m = re.search(r"(?:Reg(?:istration)?\.?\s*No\.?|CIR\s*No\.?)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-().]{3,})", t, re.I)
     if m:
         out["reg_no"] = m.group(1).strip(".")
-    m = re.search(r"(?:Batch|Lot)\s*(?:No\.?|Number)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9\-/]{1,})", t, re.I)
+    # A batch number always contains a digit; this skips OCR noise like "Batch Nc hrin".
+    m = re.search(r"(?:Batch|Lot)\s*(?:No\.?|Nc|Number)?\s*[:.\-]?\s*([A-Z0-9\-/]*\d[A-Z0-9\-/]*)", t, re.I)
     if m:
         out["batch"] = m.group(1)
     m = re.search(r"(?:Mfg|Mfd|Manufactur\w*|DOM)\.?\s*(?:Date|Dt)?\.?\s*[:.\-]?\s*" + _DATE, t, re.I)

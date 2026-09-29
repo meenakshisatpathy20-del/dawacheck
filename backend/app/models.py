@@ -200,3 +200,23 @@ class ProductSubmission(Base):
     review_note: Mapped[str | None] = mapped_column(Text)
     product_id: Mapped[int | None] = mapped_column(ForeignKey("products.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class BillCheck(Base):
+    """One bill checked (for the 'money saved per farmer' impact metric)."""
+    __tablename__ = "bill_checks"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_hash: Mapped[str | None] = mapped_column(String(64), index=True)
+    district: Mapped[str | None] = mapped_column(String(80))
+    total: Mapped[float] = mapped_column(Float, default=0)
+    saving: Mapped[float] = mapped_column(Float, default=0)
+    not_ok: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class PassportView(Base):
+    """A trader or exporter opened an MRL Passport (proxy for 'consignments sold with a passport')."""
+    __tablename__ = "passport_views"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    plot_id: Mapped[str] = mapped_column(String(60), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

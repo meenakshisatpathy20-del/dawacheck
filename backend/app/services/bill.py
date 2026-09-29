@@ -57,6 +57,7 @@ def check_bill(db: Session, *, image: bytes | None = None, ocr_text: str | None 
         items, bill_total = parsed["items"], parsed.get("total")
 
     lines, bad, saving_total, total = [], 0, 0.0, 0.0
+    uh = scan.user_hash(user_id)
     for it in items:
         name = it.get("product_name") or ""
         price = it.get("price")
@@ -91,6 +92,8 @@ def check_bill(db: Session, *, image: bytes | None = None, ocr_text: str | None 
     db.commit()
 
     total = bill_total or total
+    db.add(models.BillCheck(user_hash=uh, district=district, total=total, saving=saving_total, not_ok=bad))
+    db.commit()
     crop_name = crop or ""
     summary = i18n.t("bill.summary", lang, total=f"{total:,.0f}", bad=bad, crop=crop_name)
     if saving_total:

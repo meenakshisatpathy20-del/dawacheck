@@ -135,11 +135,30 @@ function BatchDetail() {
         {d.reports.length === 0 ? <p className="muted">None</p> : (
           <ul className="list">{d.reports.map((r, i) => (
             <li key={i}>{r.photo_url && <a href={r.photo_url} target="_blank" rel="noreferrer"><img src={r.photo_url} alt="report" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8 }} /></a>}
-              <span>{r.at.slice(0, 10)}: {r.reason} ({r.status})</span></li>
+              <span className="spacer">{r.at.slice(0, 10)}: {r.reason} <span className={`pill ${r.status === "confirmed" ? "red" : r.status === "dismissed" ? "grey" : "yellow"}`}>{r.status}</span></span>
+              {sessionStorage.getItem("dc.admin") && r.status === "open" && <>
+                <button className="btn secondary" onClick={async () => { await admin.setReport(r.id, "confirmed"); setD(await api.batch(params.get("batch"), params.get("product_id"))); }}>Confirm after inspection</button>
+                <button className="btn secondary" onClick={async () => { await admin.setReport(r.id, "dismissed"); setD(await api.batch(params.get("batch"), params.get("product_id"))); }}>Dismiss</button></>}</li>
           ))}</ul>)}</div>
       <Link to="/officer/batches">← All batches</Link>
     </>
   );
+}
+
+// Impact metrics to report (playbook section 17).
+function Impact() {
+  const [m, setM] = useState(null);
+  useEffect(() => { api.metrics().then(setM); }, []);
+  if (!m) return <div className="card">Loading…</div>;
+  const k = [
+    ["Scans", m.scans], ["Red share", `${Math.round(m.red_share * 100)}%`], ["Yellow share", `${Math.round(m.yellow_share * 100)}%`],
+    ["Bills checked", m.bills_checked], ["Money saved (Rs)", m.money_saved_rs.toLocaleString("en-IN")],
+    ["Saved per farmer (Rs)", m.money_saved_per_farmer_rs], ["Sprays logged", m.sprays_logged],
+    ["…with safe harvest date", m.sprays_with_safe_date], ["Suspicious batches flagged", m.suspicious_batches_flagged],
+    ["Reports confirmed by officers", m.reports_confirmed_by_officers], ["Plots with MRL Passport", m.plots_with_passport],
+    ["Passport views by buyers", m.passport_views_by_buyers],
+  ];
+  return <div className="kpis">{k.map(([l, v]) => <div className="kpi" key={l}><span className="muted">{l}</span><b>{v}</b></div>)}</div>;
 }
 
 function ExportView() {
@@ -257,6 +276,7 @@ export default function Officer() {
         <NavLink end to="/officer">Map</NavLink>
         <NavLink to="/officer/batches">Suspicious batches</NavLink>
         <NavLink to="/officer/export">Export view (FPO)</NavLink>
+        <NavLink to="/officer/impact">Impact</NavLink>
         <NavLink to="/officer/admin">Admin</NavLink>
       </nav>
       <Routes>
@@ -264,6 +284,7 @@ export default function Officer() {
         <Route path="batches" element={<BatchList />} />
         <Route path="batch" element={<BatchDetail />} />
         <Route path="export" element={<ExportView />} />
+        <Route path="impact" element={<Impact />} />
         <Route path="admin" element={<Admin />} />
       </Routes>
     </div>

@@ -186,6 +186,6 @@ def batch_detail(db: Session, product_id: int | None, batch: str) -> dict:
                       "exp_date": str(s.exp_date) if s.exp_date else None, "verdict": s.verdict} for s in scans],
         "dates_seen": sorted({f"{s.mfg_date or '?'} / {s.exp_date or '?'}" for s in scans if s.mfg_date or s.exp_date}),
         "shops": sorted({s.shop for s in scans if s.shop}),
-        "reports": [{"reason": r.reason, "photo_url": r.photo_url, "status": r.status,
+        "reports": [{"id": r.id, "reason": r.reason, "photo_url": r.photo_url, "status": r.status,
                      "at": r.created_at.isoformat()} for r in reports],
     }

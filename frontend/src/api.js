@@ -67,7 +67,8 @@ export const api = {
   sprayLog: (body) => request("/spray-log", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   }),
-  passport: (plot) => request(`/passport/${encodeURIComponent(plot)}`),
+  passport: (plot, view = false) => request(`/passport/${encodeURIComponent(plot)}${view ? "?view=true" : ""}`),
+  metrics: () => request("/metrics"),
   rotation: (plot, lang) => request(`/rotation?plot_id=${encodeURIComponent(plot)}&lang=${lang}`),
   sos: (q) => request(`/sos?${new URLSearchParams(Object.entries(q).filter(([, v]) => v != null && v !== ""))}`),
   weather: (q) => request(`/weather-window?${new URLSearchParams(Object.entries(q).filter(([, v]) => v != null && v !== ""))}`),
@@ -114,6 +115,7 @@ export const admin = {
     method: "PUT", headers: adminHeaders(true), body: JSON.stringify(b) }),
   submissions: (status = "pending") => request(`/admin/submissions?status=${status}`, { headers: adminHeaders() }),
   approve: (id, b) => request(`/admin/submissions/${id}/approve`, { method: "POST", headers: adminHeaders(true), body: JSON.stringify(b) }),
+  setReport: (id, status) => request(`/admin/reports/${id}`, { method: "PUT", headers: adminHeaders(), body: form({ status }) }),
   reject: (id, note) => request(`/admin/submissions/${id}/reject`, { method: "POST", headers: adminHeaders(), body: form({ note }) }),
 };
 
