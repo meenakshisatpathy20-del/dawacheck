@@ -55,10 +55,21 @@ def load_all(db: Session, seed_dir: Path = config.SEED_DIR, demo_scans: bool = T
     db.flush()
     counts["active_ingredients"] = len(by_name)
 
+    def get_ai(name: str) -> models.ActiveIngredient:
+        """Chemicals found in parsed PDFs but missing from the enrichment table are created bare
+        (no IRAC/FRAC group or colour) so they still get registry and label-claim checks."""
+        key = normalise.ingredient(name)
+        if key not in by_name:
+            by_name[key] = models.ActiveIngredient(name=key, first_aid_text=defaults.get("first_aid_text"),
+                                                   source_url=defaults.get("source_url"))
+            db.add(by_name[key])
+            db.flush()
+        return by_name[key]
+
     claims = _read("label_claims.json", seed_dir)
     n = 0
     for it in claims["items"]:
-        ai = by_name[normalise.ingredient(it["ai"])]
+        ai = get_ai(it["ai"])
         f = _formulation(db, ai, it["pct"], it["type"])
         ai_lo, ai_hi = normalise.parse_range(it.get("ai_g_ha"))
         fo_lo, fo_hi = normalise.parse_range(it.get("form_ha"))
@@ -76,7 +87,7 @@ def load_all(db: Session, seed_dir: Path = config.SEED_DIR, demo_scans: bool = T
     prods = _read("products.json", seed_dir)
     by_brand: dict[str, models.Product] = {}
     for it in prods["items"]:
-        ai = by_name[normalise.ingredient(it["ai"])]
+        ai = get_ai(it["ai"])
         f = _formulation(db, ai, it["pct"], it["type"], registered=it.get("formulation_registered", True))
         p = models.Product(brand=it["brand"], company=it.get("company"), formulation=f, reg_no=it.get("reg_no"),
                            pack_sizes=it.get("pack_sizes", []), toxicity_colour=it.get("toxicity_colour"),
@@ -94,7 +105,7 @@ def load_all(db: Session, seed_dir: Path = config.SEED_DIR, demo_scans: bool = T
     for it in bans["items"]:
         for name in it["ai"]:
             db.add(models.StateCropBan(state=it["state"], crop=normalise.crop(it["crop"]),
-                                       active_ingredient=by_name[normalise.ingredient(name)],
+                                       active_ingredient=get_ai(name),
                                        effective_from=date.fromisoformat(it["effective_from"]),
                                        source_url=it.get("source_url")))
             n += 1
@@ -103,7 +114,7 @@ def load_all(db: Session, seed_dir: Path = config.SEED_DIR, demo_scans: bool = T
     flags = _read("export_flags.json", seed_dir)
     for it in flags["items"]:
         db.add(models.ExportFlag(crop=normalise.crop(it["crop"]), market=it["market"],
-                                 active_ingredient=by_name[normalise.ingredient(it["ai"])],
+                                 active_ingredient=get_ai(it["ai"]),
                                  note=it.get("note"), source_url=it.get("source_url")))
     counts["export_flags"] = len(flags["items"])
     db.flush()
@@ -112,8 +123,15 @@ def load_all(db: Session, seed_dir: Path = config.SEED_DIR, demo_scans: bool = T
         counts["demo_scans"] = _load_demo_scans(db, _read("demo_scans.json", seed_dir), by_brand)
 
     db.commit()
-    from .services import radar  # local import: radar imports models
+    from .rules import evaluate  # local imports: services import models
+    from .services import radar, scan
     counts["batch_signals"] = radar.recompute(db)
+    # Give every seeded scan the verdict the engine would have given it.
+    for s in db.scalars(select(models.Scan).where(models.Scan.verdict.is_(None))):
+        ident = scan.identify(db, product_id=s.product_id, fields={"batch": s.batch,
+                              "exp_date": s.exp_date.isoformat() if s.exp_date else None})
+        res = evaluate(scan.build_facts(db, ident, today=s.created_at.date()), "scan")
+        s.verdict, s.fired_rules = res["verdict"], [r["id"] for r in res["fired"]]
     db.commit()
     return counts
 

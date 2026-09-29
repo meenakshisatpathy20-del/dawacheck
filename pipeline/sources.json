@@ -1,0 +1,11 @@
+{
+  "_note": "Add every CIB&RC 'Major Uses of Pesticides' PDF (insecticides, fungicides, herbicides, bio-pesticides, PGRs) and the registered-products list. Links are on https://ppqs.gov.in/ (CIB&RC section). Copy each PDF link from the site: do not guess URLs. kind = major_uses | registered_products | banned_list",
+  "sources": [
+    {"name": "major_uses_insecticides", "kind": "major_uses", "url": ""},
+    {"name": "major_uses_fungicides", "kind": "major_uses", "url": ""},
+    {"name": "major_uses_herbicides", "kind": "major_uses", "url": ""},
+    {"name": "major_uses_bio_insecticides", "kind": "major_uses", "url": ""},
+    {"name": "registered_products", "kind": "registered_products", "url": ""},
+    {"name": "banned_restricted", "kind": "banned_list", "url": ""}
+  ]
+}

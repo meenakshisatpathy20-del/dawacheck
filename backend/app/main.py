@@ -135,6 +135,13 @@ def get_passport(plot_id: str, db: Session = Depends(get_db)):
     return p
 
 
+@app.get("/fpo/plots")
+def get_fpo_plots(db: Session = Depends(get_db)):
+    """FPO / exporter view: every member plot with its spray record, flags and earliest safe harvest."""
+    plots = db.scalars(select(models.SprayLog.plot_id).distinct()).all()
+    return [spray.passport(db, p) for p in sorted(plots)]
+
+
 @app.get("/rotation")
 def get_rotation(plot_id: str, crop: str | None = None, pest: str | None = None, lang: str = "en",
                  db: Session = Depends(get_db)):

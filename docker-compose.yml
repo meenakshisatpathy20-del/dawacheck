@@ -1,0 +1,54 @@
+# docker compose up --build   ->  app on http://localhost:8000/app/  (API docs: /docs)
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: dawacheck
+      POSTGRES_PASSWORD: dawacheck
+      POSTGRES_DB: dawacheck
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dawacheck"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: dawacheck
+      MINIO_ROOT_PASSWORD: dawacheck-secret
+    ports: ["9001:9001"]
+    volumes: [minio:/data]
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on: [minio]
+    entrypoint: >
+      sh -c "until mc alias set local http://minio:9000 dawacheck dawacheck-secret; do sleep 1; done;
+             mc mb -p local/dawacheck"
+
+  app:
+    build: .
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_started}
+      minio-init: {condition: service_completed_successfully}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://dawacheck:dawacheck@db:5432/dawacheck
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: dawacheck
+      S3_ACCESS_KEY: dawacheck
+      S3_SECRET_KEY: dawacheck-secret
+    ports: ["8000:8000"]
+
+volumes:
+  pgdata:
+  minio:

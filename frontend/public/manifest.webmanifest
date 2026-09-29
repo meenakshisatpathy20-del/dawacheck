@@ -1,0 +1,11 @@
+{
+  "name": "DawaCheck",
+  "short_name": "DawaCheck",
+  "description": "Check a pesticide before you buy, mix or spray it.",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#f6f4ee",
+  "theme_color": "#1f7a3a",
+  "icons": [{ "src": "/app/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

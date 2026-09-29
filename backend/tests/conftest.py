@@ -4,7 +4,8 @@ import tempfile
 from pathlib import Path
 
 _DB = Path(tempfile.mkdtemp()) / "test.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{_DB}"
+# TEST_DATABASE_URL=postgresql+psycopg://... runs the same suite against PostgreSQL.
+os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", f"sqlite:///{_DB}")
 os.environ["DAWACHECK_OFFLINE"] = "1"
 os.environ["LLM_ENABLED"] = "off"
 os.environ["UPLOAD_DIR"] = str(_DB.parent / "uploads")
