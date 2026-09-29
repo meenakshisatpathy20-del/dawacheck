@@ -1,0 +1,6 @@
+{
+  "_note": "Punjab's ban on 11 pesticides for basmati, 14 June 2025, as listed in the playbook (source: The Tribune). Re-open the source and the state order before the demo.",
+  "items": [
+    {"state": "punjab", "crop": "basmati", "effective_from": "2025-06-14", "source_url": "https://www.tribuneindia.com/", "ai": ["acephate", "buprofezin", "chlorpyrifos", "carbofuran", "propiconazole", "thiamethoxam", "profenofos", "imidacloprid", "carbendazim", "tricyclazole", "tebuconazole"]}
+  ]
+}

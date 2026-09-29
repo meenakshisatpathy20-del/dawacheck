@@ -1,0 +1,17 @@
+[
+  {"id": "R1",  "scope": ["scan"],  "name": "Not registered",               "when": {"op": "not_registered"},                              "verdict": "red",    "message_key": "not_registered"},
+  {"id": "G1",  "scope": ["scan"],  "name": "Not in our catalogue yet",     "when": {"op": "not_in_catalogue"},                            "verdict": "grey",   "message_key": "not_in_catalogue"},
+  {"id": "R2",  "scope": ["scan"],  "name": "Banned / restricted",          "when": {"op": "banned_or_restricted"},                        "verdict": "red",    "message_key": "banned"},
+  {"id": "R3",  "scope": ["scan"],  "name": "Expired",                      "when": {"op": "expired"},                                     "verdict": "red",    "message_key": "expired"},
+  {"id": "R4",  "scope": ["scan"],  "name": "Near expiry",                  "when": {"op": "expires_within_days", "days": 30},             "verdict": "yellow", "message_key": "near_expiry"},
+  {"id": "R5",  "scope": ["scan"],  "name": "Not approved for crop",        "when": {"op": "not_exists", "table": "label_claims", "match": ["active_ingredient", "formulation", "crop"]}, "verdict": "yellow", "message_key": "not_approved_crop", "suggest": {"query": "approved_for", "args": ["crop", "pest"]}},
+  {"id": "R6",  "scope": ["scan"],  "name": "Not approved for pest",        "when": {"op": "not_exists", "table": "label_claims", "match": ["active_ingredient", "formulation", "crop", "pest"], "requires": "crop_claim_exists"}, "verdict": "yellow", "message_key": "not_approved_pest", "suggest": {"query": "approved_for", "args": ["crop", "pest"]}},
+  {"id": "R7",  "scope": ["scan", "spray"], "name": "State crop ban",       "when": {"op": "state_crop_ban"},                              "verdict": "red",    "message_key": "state_crop_ban"},
+  {"id": "R8",  "scope": ["scan"],  "name": "Batch anomaly",                "when": {"op": "batch_anomaly", "min_score": 1.0},             "verdict": "red",    "message_key": "batch_anomaly"},
+  {"id": "R9",  "scope": ["mix"],   "name": "Duplicate ingredient in mix",  "when": {"op": "duplicate_ingredient"},                        "verdict": "yellow", "message_key": "duplicate_ingredient"},
+  {"id": "R10", "scope": ["mix", "rotation"], "name": "Same resistance group", "when": {"op": "same_moa_group"},                          "verdict": "yellow", "message_key": "same_moa_group"},
+  {"id": "R11", "scope": ["mix"],   "name": "Toxicity stacking",            "when": {"op": "toxicity_stacking", "colours": ["red", "yellow"], "min_count": 2}, "verdict": "yellow", "message_key": "toxicity_stacking"},
+  {"id": "M4",  "scope": ["mix"],   "name": "Physical form mismatch",       "when": {"op": "form_mismatch", "groups": [["WP", "WG", "DP", "GR"], ["EC", "SL", "SC", "EW", "CS", "OD", "ZC"]]}, "verdict": "info", "message_key": "jar_test"},
+  {"id": "R12", "scope": ["spray"], "name": "Harvest too early",            "when": {"op": "harvest_before_phi"},                          "verdict": "red",    "message_key": "harvest_too_early"},
+  {"id": "R13", "scope": ["weather"], "name": "Weather",                    "when": {"op": "weather_unsafe", "rain_mm": 0.5, "rain_prob_pct": 50, "wind_kmh": 15, "temp_c": 35, "hours": 6}, "verdict": "yellow", "message_key": "weather"}
+]

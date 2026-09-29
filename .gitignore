@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.db
+backend/uploads/
+node_modules/
+frontend/dist/
+.env
+data/raw/*
+!data/raw/.gitkeep
+data/interim/
+.DS_Store

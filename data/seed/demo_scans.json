@@ -1,0 +1,30 @@
+{
+  "_note": "Seeded anonymous scans so the Fake-Batch Radar has signals to show (playbook W6: 'show W5 and W6 with real logic on sample data'). All locations are district centroids, not farms.",
+  "districts": {
+    "Yavatmal":  [20.39, 78.12],
+    "Amravati":  [20.93, 77.75],
+    "Nagpur":    [21.15, 79.09],
+    "Wardha":    [20.74, 78.60],
+    "Ludhiana":  [30.90, 75.85],
+    "Amritsar":  [31.63, 74.87],
+    "Sangrur":   [30.25, 75.84],
+    "Guntur":    [16.31, 80.44]
+  },
+  "scans": [
+    {"brand": "Profex 50", "batch": "PF24-117", "mfg": "2025-03-01", "exp": "2027-02-28", "district": "Yavatmal", "days_ago": 12, "shop": "Shop A, Yavatmal"},
+    {"brand": "Profex 50", "batch": "PF24-117", "mfg": "2025-03-01", "exp": "2027-02-28", "district": "Yavatmal", "days_ago": 10, "shop": "Shop A, Yavatmal"},
+    {"brand": "Profex 50", "batch": "PF24-117", "mfg": "2024-11-10", "exp": "2026-11-09", "district": "Yavatmal", "days_ago": 6, "shop": "Shop B, Yavatmal"},
+    {"brand": "Profex 50", "batch": "PF24-117", "mfg": "2024-11-10", "exp": "2026-11-09", "district": "Amravati", "days_ago": 4, "shop": null},
+    {"brand": "Kavach Imida 17.8", "batch": "KI25-042", "mfg": "2025-06-01", "exp": "2027-05-31", "district": "Yavatmal", "days_ago": 3, "qr": "DC-QR-1001|KI25-042|0001"},
+    {"brand": "Kavach Imida 17.8", "batch": "KI25-042", "mfg": "2025-06-01", "exp": "2027-05-31", "district": "Guntur", "days_ago": 3, "qr": "DC-QR-1001|KI25-042|0001"},
+    {"brand": "Emacure", "batch": "EM25-009", "mfg": "2025-05-01", "exp": "2027-04-30", "district": "Wardha", "days_ago": 8},
+    {"brand": "Blastguard 75", "batch": "BG25-221", "mfg": "2025-04-01", "exp": "2027-03-31", "district": "Ludhiana", "days_ago": 5},
+    {"brand": "Tricy Plus", "batch": "TP25-310", "mfg": "2025-02-01", "exp": "2027-01-31", "district": "Amritsar", "days_ago": 7},
+    {"brand": "Phorate 10G (demo)", "batch": "X-0091", "mfg": "2025-01-01", "exp": "2026-12-31", "district": "Yavatmal", "days_ago": 9, "shop": "Shop B, Yavatmal"},
+    {"brand": "Phorate 10G (demo)", "batch": "X-0091", "mfg": "2025-01-01", "exp": "2026-12-31", "district": "Nagpur", "days_ago": 2},
+    {"brand": "Chlorokill 20", "batch": "CK25-501", "mfg": "2025-07-01", "exp": "2027-06-30", "district": "Sangrur", "days_ago": 1}
+  ],
+  "reports": [
+    {"brand": "Profex 50", "batch": "PF24-117", "district": "Yavatmal", "reason": "Smell and colour different from last bottle; bill has no batch number."}
+  ]
+}

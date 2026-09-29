@@ -1,0 +1,41 @@
+{
+  "_note": "Spelling variants -> canonical names. Add regional words freely; keys are canonical.",
+  "crops": {
+    "rice": ["paddy", "dhan", "dhaan", "chawal", "bhat", "tandul", "jhona", "vari"],
+    "basmati": ["basmati rice", "basmati paddy", "basmati dhan"],
+    "cotton": ["kapas", "kapaas", "narma", "kapus", "kapus (cotton)", "patti"],
+    "tomato": ["tamatar", "tamata", "tamaatar", "tameta"],
+    "okra": ["bhindi", "bhendi", "lady finger", "ladies finger"]
+  },
+  "crop_parents": {
+    "basmati": "rice"
+  },
+  "pests": {
+    "bollworm": ["sundi", "sundhi", "boll worm", "american bollworm", "pink bollworm", "spotted bollworm", "helicoverpa", "bond ali", "gulabi sundi"],
+    "jassid": ["jassids", "leafhopper", "leaf hopper", "tudtude", "hara tela"],
+    "aphid": ["aphids", "mahu", "mawa", "chepa"],
+    "whitefly": ["white fly", "whiteflies", "safed makhi", "safed makkhi", "pandhari mashi"],
+    "thrips": ["thrip", "fulkide"],
+    "brown plant hopper": ["bph", "brown planthopper", "bhura tela", "tela"],
+    "stem borer": ["stemborer", "yellow stem borer", "tana chhedak", "khod kida"],
+    "leaf folder": ["leaffolder", "leaf roller", "patta lapet"],
+    "blast": ["rice blast", "leaf blast", "neck blast", "jhulsa", "karpa"],
+    "sheath blight": ["sheath blight disease", "sheath rot"],
+    "fruit borer": ["tomato fruit borer", "fal chhedak", "phal chhedak", "fal pokharnari ali"],
+    "early blight": ["agheti jhulsa", "leaf spot"],
+    "late blight": ["pachheti jhulsa"]
+  },
+  "ingredients": {
+    "imidacloprid": ["imidachloprid", "imidacloprid 17.8", "imida"],
+    "chlorpyrifos": ["chlorpyriphos", "chloropyriphos", "chlorpyrifos 20"],
+    "profenofos": ["profenophos"],
+    "thiamethoxam": ["thiamethoxom", "thiametoxam"],
+    "lambda-cyhalothrin": ["lambda cyhalothrin", "lamda cyhalothrin", "l-cyhalothrin"],
+    "emamectin benzoate": ["emamectin", "emamactin benzoate"],
+    "chlorantraniliprole": ["chlorantranilipole", "rynaxypyr"],
+    "tricyclazole": ["tricyclozole", "tricyclazol"],
+    "carbendazim": ["carbendazime", "carbendazin"],
+    "cartap hydrochloride": ["cartap", "cartap hcl"],
+    "copper oxychloride": ["coc", "copper oxy chloride"]
+  }
+}

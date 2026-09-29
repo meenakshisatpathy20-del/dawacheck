@@ -1,0 +1,9 @@
+{
+  "_note": "EU detections in Indian rice, 2015-2025, from a Lok Sabha answer (March 2025) as cited in the playbook. Counts are shown as notes only; they are not used to compute any verdict.",
+  "items": [
+    {"crop": "rice", "market": "EU", "ai": "tricyclazole", "note": "97 EU detections in Indian rice, 2015-2025 (Lok Sabha answer, Mar 2025)", "source_url": "https://sansad.in/ls"},
+    {"crop": "rice", "market": "EU", "ai": "thiamethoxam", "note": "60 EU detections in Indian rice, 2015-2025 (Lok Sabha answer, Mar 2025)", "source_url": "https://sansad.in/ls"},
+    {"crop": "rice", "market": "EU", "ai": "carbendazim", "note": "20 EU detections in Indian rice, 2015-2025 (Lok Sabha answer, Mar 2025)", "source_url": "https://sansad.in/ls"},
+    {"crop": "rice", "market": "EU", "ai": "chlorpyrifos", "note": "18 EU detections in Indian rice, 2015-2025 (Lok Sabha answer, Mar 2025)", "source_url": "https://sansad.in/ls"}
+  ]
+}
