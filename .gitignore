@@ -11,3 +11,4 @@ data/raw/*
 !data/raw/.gitkeep
 data/interim/
 .DS_Store
+docs/deck/node_modules/
