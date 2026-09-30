@@ -142,4 +142,4 @@ Review `data/interim/review.csv`, then rewrite `backend/data/kb_questions.json` 
 - The farmer app is a Progressive Web App rather than Flutter/React Native (the playbook allows either tool choice; all logic is in the API, so native screens can be added).
 - Crop/pest pictures are emoji until real photos are added to `frontend/public/img/`; pre-recorded voice clips are generated with `scripts/make_voice_clips.py` (needs internet or a local TTS model).
 
-See [`docs/`](docs/) for the demo script, judge Q&A, sources, evaluation mapping, business and risks and the final checklist.
+See [`docs/`](docs/) for the demo script, judge Q&A, sources, evaluation mapping, business, risks and the final checklist.
