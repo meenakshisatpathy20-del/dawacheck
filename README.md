@@ -8,7 +8,7 @@ DawaCheck is a voice-first app that checks a pesticide at the moment of purchase
 
 ## For judges: try it in 60 seconds
 
-**Live app:** `https://<your-project>.vercel.app/` · **Officer dashboard:** `/#/officer` · **API docs:** `/api/docs`
+**Live site:** https://dawacheck-theta.vercel.app/ · **Officer dashboard:** https://dawacheck-theta.vercel.app/#/officer · **API docs:** https://dawacheck-theta.vercel.app/api/docs
 
 1. Open the website on a laptop or phone. Under **"Try it now: no packet needed"**, tap each sample product:
    - **Emacure**: green, with dose per tank, safety gear and the safe harvest date.
