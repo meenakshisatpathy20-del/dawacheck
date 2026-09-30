@@ -1,6 +1,6 @@
 [
   {"id": "R1", "scope": ["scan"], "name": "Not registered", "when": {"op": "not_registered"}, "verdict": "red", "message_key": "not_registered"},
-  {"id": "G1", "scope": ["scan"], "name": "Not in our catalogue yet", "when": {"op": "not_in_catalogue"}, "verdict": "grey", "message_key": "not_in_catalogue"},
+  {"id": "G1", "scope": ["scan"], "name": "Not in our catalogue yet", "when": {"op": "not_in_catalogue"}, "verdict": "info", "message_key": "not_in_catalogue"},
   {"id": "R2", "scope": ["scan"], "name": "Banned / restricted", "when": {"op": "banned_or_restricted"}, "verdict": "red", "message_key": "banned"},
   {"id": "R3", "scope": ["scan"], "name": "Expired", "when": {"op": "expired"}, "verdict": "red", "message_key": "expired"},
   {"id": "R4", "scope": ["scan"], "name": "Near expiry", "when": {"op": "expires_within_days", "days": 30}, "verdict": "yellow", "message_key": "near_expiry"},

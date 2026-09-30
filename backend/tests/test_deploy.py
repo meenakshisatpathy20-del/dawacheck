@@ -113,3 +113,29 @@ def test_photos_served_by_backend_from_disk_and_bucket(client, monkeypatch):
     # Invalid names never touch the disk or bucket
     assert client.get("/uploads/pack/..%2F..%2Fetc%2Fpasswd").status_code == 404
     assert client.get("/uploads/secret/" + "a" * 64 + ".jpg").status_code == 404
+
+
+def test_weather_window_uses_field_local_time(monkeypatch):
+    """Server clock is UTC; the forecast is in local time (IST = +5:30). Start at the local hour."""
+    from datetime import datetime, timedelta, timezone
+
+    import httpx
+
+    from app.services import weather
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    local = now_utc + timedelta(seconds=19800)
+    base = local.replace(minute=0, second=0, microsecond=0) - timedelta(hours=10)
+    times = [(base + timedelta(hours=i)).strftime("%Y-%m-%dT%H:00") for i in range(30)]
+
+    class R:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            n = len(times)
+            return {"utc_offset_seconds": 19800, "hourly": {"time": times, "precipitation": [0] * n,
+                    "precipitation_probability": [0] * n, "wind_speed_10m": [0] * n, "temperature_2m": [25] * n}}
+    monkeypatch.setattr(config, "OFFLINE", False)
+    monkeypatch.setattr(httpx, "get", lambda *a, **k: R())
+    out = weather.fetch(19.0, 73.0)
+    assert out["hours"][0]["time"] == local.strftime("%H:00")

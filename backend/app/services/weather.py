@@ -1,7 +1,7 @@
 """C7 Spray window: Open-Meteo hourly forecast (free, no key) -> rule R13."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -18,10 +18,13 @@ def fetch(lat: float, lon: float, hours: int = 12) -> dict | None:
     try:
         r = httpx.get(config.OPEN_METEO_URL, params=params, timeout=8)
         r.raise_for_status()
-        h = r.json()["hourly"]
+        data = r.json()
+        h = data["hourly"]
     except (httpx.HTTPError, KeyError, ValueError):
         return None
-    now = datetime.now().strftime("%Y-%m-%dT%H:00")
+    # Forecast times are local to the field (timezone=auto); the server clock is UTC on Vercel.
+    local_now = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(seconds=data.get("utc_offset_seconds") or 0)
+    now = local_now.strftime("%Y-%m-%dT%H:00")
     start = next((i for i, t in enumerate(h["time"]) if t >= now), 0)
     rows = []
     for i in range(start, min(start + hours, len(h["time"]))):

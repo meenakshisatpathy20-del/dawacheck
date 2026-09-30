@@ -6,7 +6,7 @@
  "not_registered.ingredient": "Not found in the government registry. Ask the dealer for the registration certificate.",
  "not_registered.formulation": "{name} is not found in the government registry. Ask the dealer for the registration certificate.",
  "not_registered.reg_no": "Registration number {name} on this pack does not match our records ({expected}). Keep the bill and ask the dealer.",
- "not_in_catalogue": "{name} is registered, but this brand is not in our catalogue yet. Check the label with the dealer.",
+ "not_in_catalogue": "Brand not in our catalogue yet. Checked as {name} (the registered chemical and formulation on the label): crop approval, dose, waiting period and safety below.",
  "banned.banned": "This chemical ({chemical}) is banned in India.",
  "banned.restricted": "This chemical ({chemical}) is restricted in India. {note}",
  "expired": "Expired on {date}. Do not use.",

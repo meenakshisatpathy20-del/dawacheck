@@ -4,6 +4,7 @@ import L from "./leafletGlobal.js";
 import "leaflet.heat";
 import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { Link, NavLink, Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
+import { Shell } from "../farmer/common.jsx";
 import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { admin, api, fileUrl, fpoPlots } from "../api.js";
 
@@ -267,11 +268,7 @@ function Admin() {
 
 export default function Officer() {
   return (
-    <div className="dash">
-      <div className="row">
-        <Link to="/" className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck</Link>
-        <span className="muted">Officer / FPO dashboard · Fake-Batch Radar</span>
-      </div>
+    <Shell back={false} wide title="Officer / FPO dashboard · Fake-Batch Radar">
       <nav className="tabs">
         <NavLink end to="/officer">Map</NavLink>
         <NavLink to="/officer/batches">Suspicious batches</NavLink>
@@ -287,6 +284,6 @@ export default function Officer() {
         <Route path="impact" element={<Impact />} />
         <Route path="admin" element={<Admin />} />
       </Routes>
-    </div>
+    </Shell>
   );
 }

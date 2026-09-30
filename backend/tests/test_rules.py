@@ -55,7 +55,7 @@ def test_r1_unregistered_formulation_and_reg_no_mismatch():
 def test_g1_grey_when_brand_unknown_but_registered():
     f = scan_facts(identified={"attempted": True, "ai_known": True, "formulation_registered": True, "product_matched": False})
     res = evaluate(f, "scan")
-    assert ids(res) == ["G1"] and res["verdict"] == "grey"
+    assert ids(res) == ["G1"] and res["verdict"] == "green"  # G1 is a note; formulation checks decide
 
 
 def test_r2_banned():

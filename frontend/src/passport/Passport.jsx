@@ -9,11 +9,11 @@ export default function Passport() {
   const [err, setErr] = useState(null);
   useEffect(() => { api.passport(plotId, true).then(setP).catch((e) => setErr(e.message)); }, [plotId]);
 
-  if (err) return <div className="phone"><div className="error">{err}</div></div>;
-  if (!p) return <div className="phone"><div className="card">Loading…</div></div>;
+  if (err) return <div className="page"><div className="error">{err}</div></div>;
+  if (!p) return <div className="page"><div className="card">Loading…</div></div>;
   const risk = p.residue_risk === "high" ? "red" : p.residue_risk === "medium" ? "yellow" : "green";
   return (
-    <div className="phone" style={{ maxWidth: 640 }}>
+    <div className="page" style={{ maxWidth: 640 }}>
       <div className="topbar"><span className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck · MRL Passport</span></div>
       <div className={`verdict v-${risk}`}>
         <div className="ico">{p.safe_now ? "✅" : "⏳"}</div>

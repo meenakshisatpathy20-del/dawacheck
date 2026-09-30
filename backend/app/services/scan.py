@@ -93,13 +93,23 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
                 if c[1] > merged.get(c[0].id, (None, 0))[1]:
                     merged[c[0].id] = c
             cands = sorted(merged.values(), key=lambda t: -t[1])[:3]
+        label_ai = catalogue.find_ai(db, ex.get("active_ingredient"))
+        if label_ai is not None:
+            # The chemical printed on the pack is the strongest clue: brands with another chemical are
+            # not this product, and a brand with the same strength ranks above one with another strength.
+            pct = _num(ex.get("strength_pct"))
+            cands = sorted(
+                [(c[0], min(100, c[1] + (8 if pct is not None and abs(c[0].formulation.strength_pct - pct) < 0.051 else 0)))
+                 for c in cands if c[0].formulation.active_ingredient_id == label_ai.id],
+                key=lambda t: -t[1])
         out["candidates"] = [{**catalogue.product_card(c[0]), "score": round(c[1])} for c in cands]
         if cands and cands[0][1] >= catalogue.MATCH_THRESHOLD:
             p = cands[0][0]
             # Low margin between top two brands -> ask the farmer.
             out["needs_confirmation"] = len(cands) > 1 and cands[0][1] - cands[1][1] < 5
-        elif cands:
+        elif cands and label_ai is None:
             out["needs_confirmation"] = True
+        # else: brand not in the catalogue, but the chemical is known -> check at formulation level (G1 note)
     out["product"] = p
 
     if p is not None:
@@ -128,6 +138,13 @@ def identify(db: Session, *, product_id=None, qr_payload=None, ocr_text=None, fi
 
 
 CHECK_FIELDS = ("brand", "active_ingredient", "strength_pct", "batch", "mfg_date", "exp_date", "reg_no")
+
+
+def _num(v):
+    try:
+        return float(v) if v not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _field_checks(image: bytes, lines: list[dict], ex: dict) -> dict:

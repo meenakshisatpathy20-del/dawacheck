@@ -49,58 +49,79 @@ export default function Home() {
   }, [lang]);
 
   return (
-    <Shell back={false}>
+    <Shell back={false} wide>
       {due.map((r) => (
         <div key={r.plot} className="banner row" style={{ background: "var(--green-bg)", color: "var(--green)" }}>
           <span className="spacer">🔔 {t(lang, "harvestToday")}: {CROP_NAME[lang][r.crop] || r.crop} · {r.plot}</span>
           <button className="btn secondary" onClick={() => { reminders.markShown(r.plot); setDue(due.filter((x) => x !== r)); }}>✓</button>
         </div>
       ))}
+      <section className="hero">
+        <div>
+          <h1>{t(lang, "heroTitle")}</h1>
+          <p className="lead">{t(lang, "heroSub")}</p>
+          <div className="row">
+            <Link className="btn" to={next("/scan")}>📷 {t(lang, "scanPacket")}</Link>
+            <Link className="btn secondary" to={next("/bill")}>🧾 {t(lang, "scanBill")}</Link>
+          </div>
+          {m && m.scans > 0 && (
+            <div className="impact small">
+              <b>{m.scans}</b> {t(lang, "impScans")} · <b>{Math.round((m.red_share + m.yellow_share) * 100)}%</b> {t(lang, "impFlagged")}
+              {m.money_saved_rs > 0 && <> · <b>₹{m.money_saved_rs.toLocaleString("en-IN")}</b> {t(lang, "impSaved")}</>}
+              <div className="muted">{t(lang, "impNote")}</div>
+            </div>
+          )}
+        </div>
+        <div className="card demo">
+          <strong>▶ {t(lang, "tryDemo")}</strong>
+          <div className="muted small">{t(lang, "tryDemoHint")}</div>
+          <div className="demo-grid">
+            {DEMO.map((c) => (
+              <button key={c.key} className={`demo-case ${c.colour}`} disabled={busy} onClick={() => tryCase(c)}>
+                <b>{c.brand}</b><span>{t(lang, c.key)}</span>
+              </button>
+            ))}
+          </div>
+          {busy && <Loading text={t(lang, "checking")} />}
+          {err && <div className="error">{err}</div>}
+        </div>
+      </section>
+
       <div className="big-grid">
-        <Link className="big" to={next("/scan")}><span className="ico">📷</span>{t(lang, "scanPacket")}</Link>
-        <Link className="big" to={next("/bill")}><span className="ico">🧾</span>{t(lang, "scanBill")}</Link>
-        <Link className="big" to="/mix"><span className="ico">🧪</span>{t(lang, "mixCheck")}</Link>
-        <Link className="big sos" to="/sos"><span className="ico">🆘</span>{t(lang, "sos")}</Link>
+        <Link className="big" to={next("/scan")}><span className="ico">📷</span>{t(lang, "scanPacket")}<small>{t(lang, "fScan")}</small></Link>
+        <Link className="big" to={next("/bill")}><span className="ico">🧾</span>{t(lang, "scanBill")}<small>{t(lang, "fBill")}</small></Link>
+        <Link className="big" to="/mix"><span className="ico">🧪</span>{t(lang, "mixCheck")}<small>{t(lang, "fMix")}</small></Link>
+        <Link className="big sos" to="/sos"><span className="ico">🆘</span>{t(lang, "sos")}<small>{t(lang, "fSos")}</small></Link>
       </div>
-      <Link to="/crop" className="card row" style={{ textDecoration: "none", color: "inherit" }}>
-        <span style={{ fontSize: "2rem" }}>{CROP_ICON[crop] || "🌱"}</span>
-        <div className="spacer">
-          <strong>{crop ? (CROP_NAME[lang][crop] || crop) : t(lang, "pickCrop")}</strong>
-          {pest && <div className="muted small">{pestName(lang, pest)}</div>}
-        </div>
-        <span>✎</span>
-      </Link>
-      <Link to="/sprays" className="card row" style={{ textDecoration: "none", color: "inherit" }}>
-        <span style={{ fontSize: "2rem" }}>📅</span>
-        <div className="spacer">
-          <strong>{t(lang, "mySprays")}</strong>
-          {lastSafe && <div className="muted small">{t(lang, "nextSafe")}: {lastSafe}</div>}
-        </div>
-        <span>›</span>
-      </Link>
-      <div className="card demo">
-        <strong>▶ {t(lang, "tryDemo")}</strong>
-        <div className="muted small">{t(lang, "tryDemoHint")}</div>
-        <div className="demo-grid">
-          {DEMO.map((c) => (
-            <button key={c.key} className={`demo-case ${c.colour}`} disabled={busy} onClick={() => tryCase(c)}>
-              <b>{c.brand}</b><span>{t(lang, c.key)}</span>
-            </button>
-          ))}
-        </div>
-        {busy && <Loading text={t(lang, "checking")} />}
-        {err && <div className="error">{err}</div>}
+
+      <div className="two-col">
+        <Link to="/crop" className="card row" style={{ textDecoration: "none", color: "inherit" }}>
+          <span style={{ fontSize: "2rem" }}>{CROP_ICON[crop] || "🌱"}</span>
+          <div className="spacer">
+            <strong>{crop ? (CROP_NAME[lang][crop] || crop) : t(lang, "pickCrop")}</strong>
+            {pest && <div className="muted small">{pestName(lang, pest)}</div>}
+          </div>
+          <span>✎</span>
+        </Link>
+        <Link to="/sprays" className="card row" style={{ textDecoration: "none", color: "inherit" }}>
+          <span style={{ fontSize: "2rem" }}>📅</span>
+          <div className="spacer">
+            <strong>{t(lang, "mySprays")}</strong>
+            {lastSafe && <div className="muted small">{t(lang, "nextSafe")}: {lastSafe}</div>}
+          </div>
+          <span>›</span>
+        </Link>
       </div>
-      {m && m.scans > 0 && (
-        <div className="impact small">
-          <b>{m.scans}</b> {t(lang, "impScans")} · <b>{Math.round((m.red_share + m.yellow_share) * 100)}%</b> {t(lang, "impFlagged")}
-          {m.money_saved_rs > 0 && <> · <b>₹{m.money_saved_rs.toLocaleString("en-IN")}</b> {t(lang, "impSaved")}</>}
-          <div className="muted">{t(lang, "impNote")}</div>
-        </div>
-      )}
-      <p className="small muted" style={{ textAlign: "center" }}>
-        <Link to="/officer">Officer / FPO dashboard</Link>
-      </p>
+
+      <section className="how">
+        <h2>{t(lang, "howTitle")}</h2>
+        <ol className="steps3">
+          <li><b>1</b>{t(lang, "how1")}</li>
+          <li><b>2</b>{t(lang, "how2")}</li>
+          <li><b>3</b>{t(lang, "how3")}</li>
+        </ol>
+        <p className="small muted"><Link to="/officer">{t(lang, "navOfficer")} →</Link></p>
+      </section>
     </Shell>
   );
 }

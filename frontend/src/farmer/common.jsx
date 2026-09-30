@@ -1,24 +1,48 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import { useStore } from "../store.jsx";
 import { LANGS, t } from "../strings.js";
 
-export function Shell({ children, title, back = true }) {
+const NAV = [
+  ["/scan", "navScan"], ["/bill", "scanBill"], ["/mix", "mixCheck"], ["/sprays", "mySprays"], ["/officer", "navOfficer"],
+];
+
+// Website shell: sticky header with navigation, language and SOS; content in a readable column.
+export function Shell({ children, title, back = true, wide = false }) {
   const { lang, set } = useStore();
   const nav = useNavigate();
+  const here = useLocation().pathname;
   return (
-    <div className="phone">
-      <div className="topbar">
-        {back ? <button className="btn secondary" onClick={() => (window.history.length > 1 ? nav(-1) : nav("/"))} aria-label={t(lang, "back")}>←</button>
-          : <Link to="/" className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck</Link>}
-        {title && <strong style={{ fontSize: "1.1rem" }}>{title}</strong>}
-        <select className="lang" value={lang} onChange={(e) => set({ lang: e.target.value })} aria-label="Language">
-          {Object.entries(LANGS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-      </div>
-      {children}
-      <button className="sos-fab" onClick={() => nav("/sos")} aria-label="SOS">SOS</button>
+    <div className="site">
+      <header className="site-head">
+        <div className="site-head-in">
+          <Link to="/" className="brand"><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />DawaCheck</Link>
+          <nav className="site-nav" aria-label="Main">
+            {NAV.map(([to, key]) => (
+              <Link key={to} to={to} className={here.startsWith(to) ? "on" : ""}>{t(lang, key)}</Link>
+            ))}
+          </nav>
+          <div className="site-tools">
+            <select className="lang" value={lang} onChange={(e) => set({ lang: e.target.value })} aria-label="Language">
+              {Object.entries(LANGS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+            <Link to="/sos" className="sos-btn" aria-label="SOS">SOS</Link>
+          </div>
+        </div>
+      </header>
+      <main className={wide ? "page wide" : "page"}>
+        {(back || title) && (
+          <div className="page-title">
+            {back && <button className="link-btn" onClick={() => (window.history.length > 1 ? nav(-1) : nav("/"))}>← {t(lang, "back")}</button>}
+            {title && <h1>{title}</h1>}
+          </div>
+        )}
+        {children}
+      </main>
+      <footer className="site-foot">
+        DawaCheck · AI reads, rules decide · Poison helpline <a href="tel:18001161117">1800 116 117</a> · Sample data until the CIB&amp;RC import is loaded
+      </footer>
     </div>
   );
 }

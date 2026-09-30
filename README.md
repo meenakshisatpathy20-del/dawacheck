@@ -10,7 +10,7 @@ DawaCheck is a voice-first app that checks a pesticide at the moment of purchase
 
 **Live app:** `https://<your-project>.vercel.app/` · **Officer dashboard:** `/#/officer` · **API docs:** `/api/docs`
 
-1. Open the app on a phone or laptop. Under **"Try it now: no packet needed"**, tap each sample product:
+1. Open the website on a laptop or phone. Under **"Try it now: no packet needed"**, tap each sample product:
    - **Emacure**: green, with dose per tank, safety gear and the safe harvest date.
    - **Blastguard 75**: yellow, not approved for cotton, with approved alternatives (rule R5).
    - **Tricy Plus**: red, banned for basmati in Punjab (rule R7).
@@ -139,7 +139,7 @@ Review `data/interim/review.csv`, then rewrite `backend/data/kb_questions.json` 
 - Tank-mix checks cover duplicates, resistance group and toxicity only; no prediction of chemical reactions.
 - The MRL Passport is a self-declared record plus a risk estimate, not a lab certificate.
 - The SOS screen repeats label text and routes to professionals; it gives no treatment advice of its own.
-- The farmer app is a Progressive Web App rather than Flutter/React Native (the playbook allows either tool choice; all logic is in the API, so native screens can be added).
+- DawaCheck is a responsive website (laptop and phone, installable to the home screen) rather than a Flutter/React Native app; the playbook says its stack is "a default, not a rule", and all logic is in the API, so native screens can be added.
 - Crop/pest pictures are emoji until real photos are added to `frontend/public/img/`; pre-recorded voice clips are generated with `scripts/make_voice_clips.py` (needs internet or a local TTS model).
 
 See [`docs/`](docs/) for the demo script, judge Q&A, sources, evaluation mapping, business, risks and the final checklist.
