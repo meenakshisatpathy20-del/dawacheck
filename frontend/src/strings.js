@@ -6,6 +6,11 @@ export const TTS = { en: "en-IN", hi: "hi-IN", mr: "mr-IN", pa: "pa-IN", te: "te
 const S = {
   en: {
     scanPacket: "Scan packet", scanBill: "Scan bill", mixCheck: "Mix check", sos: "SOS",
+    tryDemo: "Try it now: no packet needed", tryDemoHint: "Sample products. One tap shows each kind of verdict.",
+    demoGreen: "Safe on cotton", demoWrongCrop: "Wrong crop", demoStateBan: "Banned for basmati in Punjab",
+    demoBatch: "Batch reported by farmers",
+    impScans: "packs checked", impFlagged: "stopped or flagged", impSaved: "saved on bills",
+    impNote: "On this demo server (includes sample data)",
     mySprays: "My sprays", nextSafe: "Next safe harvest", pickCrop: "Which crop?", pickPest: "Which pest or disease?",
     anyPest: "Not sure", takePhoto: "Take photo", orPick: "Or pick the product", typeQr: "Type code on pack",
     confirm: "Is this the product?", yes: "Yes", no: "No", why: "Why?", better: "Better option",
@@ -26,6 +31,11 @@ const S = {
   },
   hi: {
     scanPacket: "पैकेट जाँचें", scanBill: "बिल जाँचें", mixCheck: "मिश्रण जाँच", sos: "SOS",
+    tryDemo: "अभी आज़माएँ: पैकेट की ज़रूरत नहीं", tryDemoHint: "नमूना उत्पाद। एक टैप में हर तरह का नतीजा देखें।",
+    demoGreen: "कपास पर सुरक्षित", demoWrongCrop: "गलत फसल", demoStateBan: "पंजाब में बासमती पर प्रतिबंधित",
+    demoBatch: "किसानों ने बैच की शिकायत की",
+    impScans: "पैकेट जाँचे", impFlagged: "रोके या चेताए गए", impSaved: "बिलों पर बचत",
+    impNote: "इस डेमो सर्वर पर (नमूना डेटा सहित)",
     mySprays: "मेरे छिड़काव", nextSafe: "अगली सुरक्षित कटाई", pickCrop: "कौन सी फसल?", pickPest: "कौन सा कीट या रोग?",
     anyPest: "पता नहीं", takePhoto: "फ़ोटो लें", orPick: "या दवा चुनें", typeQr: "पैकेट का कोड लिखें",
     confirm: "क्या यही दवा है?", yes: "हाँ", no: "नहीं", why: "क्यों?", better: "बेहतर विकल्प",

@@ -6,6 +6,33 @@ DawaCheck is a voice-first app that checks a pesticide at the moment of purchase
 
 > **AI reads, rules decide.** OCR and an LLM only turn photos and text into structured fields. Every verdict, dose and date comes from a deterministic rules engine (R1–R13, stored as data) that cites its source file and page.
 
+## For judges: try it in 60 seconds
+
+**Live app:** `https://<your-project>.vercel.app/` · **Officer dashboard:** `/#/officer` · **API docs:** `/api/docs`
+
+1. Open the app on a phone or laptop. Under **"Try it now: no packet needed"**, tap each sample product:
+   - **Emacure**: green, with dose per tank, safety gear and the safe harvest date.
+   - **Blastguard 75**: yellow, not approved for cotton, with approved alternatives (rule R5).
+   - **Tricy Plus**: red, banned for basmati in Punjab (rule R7).
+   - **Profex 50**: red, this batch was reported by other farmers (rule R8).
+2. Tap **Why?** on any verdict: every rule cites its source file and page.
+3. Switch the language (हिंदी, मराठी, ਪੰਜਾਬੀ, తెలుగు) and tap **Listen again**: the verdict is spoken.
+4. Open **Officer / FPO dashboard**: suspicious-batch map, reports, impact numbers.
+5. Try **Mix check** (Chlorokill 20 + Pyrikill: double dose, R9) and **SOS** (doctor card).
+
+```mermaid
+flowchart LR
+  A[Phone: camera / QR / bill] --> B[Read: QR, OCR, vision model]
+  B --> C[Match to registry<br/>fuzzy, case-insensitive]
+  C --> D[Rules engine R1–R13<br/>data, with source + page]
+  D --> E[Verdict: green / yellow / red<br/>spoken in 5 languages]
+  D --> F[Dose per tank + safe harvest date]
+  E --> G[Batch signals → officer map]
+  F --> H[MRL passport QR for buyers]
+```
+
+**Why it is different:** the AI only reads; every decision comes from auditable rules with citations, so a verdict can be checked by an officer. It never calls a product "fake": it says "not in the registry" or "reported by farmers".
+
 ## ⚠️ Read this before any demo or field use
 
 | What | Status |
@@ -42,7 +69,7 @@ On stage with unreliable Wi-Fi set `DAWACHECK_OFFLINE=1`: no external calls; the
 
 ### Tests
 ```bash
-cd backend && python -m pytest -q                      # 106 tests
+cd backend && python -m pytest -q                      # 115 tests
 TEST_DATABASE_URL=postgresql+psycopg://user@host/db python -m pytest -q   # same suite on PostgreSQL + PostGIS
 ```
 Covers every rule, every endpoint, dose maths, extraction, a real Tesseract photo-OCR run, the PDF parsers, the admin flows, the job queue, the impact metrics and the 30 knowledge-base questions.
@@ -115,4 +142,4 @@ Review `data/interim/review.csv`, then rewrite `backend/data/kb_questions.json` 
 - The farmer app is a Progressive Web App rather than Flutter/React Native (the playbook allows either tool choice; all logic is in the API, so native screens can be added).
 - Crop/pest pictures are emoji until real photos are added to `frontend/public/img/`; pre-recorded voice clips are generated with `scripts/make_voice_clips.py` (needs internet or a local TTS model).
 
-See [`docs/`](docs/) for the demo script, judge Q&A, sources, evaluation mapping, business, risks and the final checklist.
+See [`docs/`](docs/) for the demo script, judge Q&A, sources, evaluation mapping, business and risks and the final checklist.
