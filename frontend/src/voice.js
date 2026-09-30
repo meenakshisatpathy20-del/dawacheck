@@ -1,12 +1,22 @@
 // Voice output via the browser's speech engine (Indian-language voices where
 // installed) plus a short tone per verdict: colour + icon + sound, never colour alone.
+// Marathi is written in Devanagari, so a Hindi voice can read it when no Marathi voice is installed.
+const FALLBACK_VOICE = { "mr-IN": "hi-IN" };
+
+function findVoice(locale) {
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find((v) => v.lang === locale) || voices.find((v) => v.lang.startsWith(locale.slice(0, 2)));
+}
+
 export function speak(text, locale = "en-IN") {
   if (!text || !("speechSynthesis" in window)) return false;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = locale;
-  const voice = window.speechSynthesis.getVoices().find((v) => v.lang === locale)
-    || window.speechSynthesis.getVoices().find((v) => v.lang.startsWith(locale.slice(0, 2)));
+  const voice = findVoice(locale) || (FALLBACK_VOICE[locale] && findVoice(FALLBACK_VOICE[locale]));
+  // No voice for this language on the phone (voice list loaded but empty for it): stay silent rather
+  // than read Telugu or Punjabi with an English voice. The text is on screen and the tone still plays.
+  if (!voice && window.speechSynthesis.getVoices().length && !locale.startsWith("en")) return false;
   if (voice) u.voice = voice;
   u.rate = 0.9;
   window.speechSynthesis.speak(u);
@@ -17,7 +27,16 @@ export function speak(text, locale = "en-IN") {
 // public/audio/<lang>/<message_key>.mp3 is played when present; it works offline once cached.
 // Generate them with scripts/make_voice_clips.py. Anything without a clip is spoken by TTS.
 let clipAudio = null;
-export function playClip(lang, key) {
+let manifest = null;
+function clipList() {
+  manifest = manifest || fetch(`${import.meta.env.BASE_URL}audio/manifest.json`)
+    .then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+  return manifest;
+}
+
+export async function playClip(lang, key) {
+  const list = await clipList();
+  if (!(list[lang] || []).includes(key)) return false;
   return new Promise((resolve) => {
     const a = new Audio(`${import.meta.env.BASE_URL}audio/${lang}/${key}.mp3`);
     clipAudio = a;

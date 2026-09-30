@@ -38,7 +38,8 @@ export default function Bill() {
               <strong className="spacer">{it.product?.brand || it.input.product_name}</strong>
               <span>₹{it.input.price ?? "—"}</span>
             </div>
-            {it.product && <div className="small muted">{it.product.formulation}</div>}
+            {(it.product || it.formulation) && <div className="small muted">{it.product?.formulation || it.formulation}</div>}
+            {it.message && <div className="small">{it.message}</div>}
             <RuleList fired={it.fired} />
             {it.cheaper && <div className="banner">💰 {it.cheaper.text} ({it.cheaper.brand} {it.cheaper.pack_size}, {it.cheaper.seen})</div>}
             {it.suggestions?.length > 0 && <div className="small">💡 {it.suggestions.map((o) => o.formulation).join(", ")}</div>}

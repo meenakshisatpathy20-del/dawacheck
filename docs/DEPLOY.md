@@ -21,7 +21,7 @@ Choose **C** or **B** if you want every item exactly as in the playbook's stack 
 2. Environment Variables: `ADMIN_TOKEN`, `USER_HASH_SALT`, and optionally `ANTHROPIC_API_KEY`. Deploy.
    For the background queue add, from console.upstash.com → QStash: `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` (or install the Upstash QStash integration from the Vercel Marketplace, which sets them).
 3. Storage → **Create Database → Neon (Postgres)** → connect to the project, then **Redeploy**. The backend creates its tables and loads the demo data on first start.
-4. Open `https://<project>.vercel.app/` (app), `/#/officer` (dashboard), `/api/health`, `/api/docs`.
+4. Open `https://<project>.vercel.app/` (website), `/#/officer` (dashboard), `/api/health`, `/api/docs`. `/api/health` must show `"db": "postgresql+psycopg"` and an empty `warnings` list; any warning says what is still missing.
 
 On Vercel:
 - **Photo reading:** with `ANTHROPIC_API_KEY`, the vision model reads label and bill photos on the server; without it, the phone reads them itself (Tesseract compiled to WebAssembly, files served from `/ocr/`, cached for offline).

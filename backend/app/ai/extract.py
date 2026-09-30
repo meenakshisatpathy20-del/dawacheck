@@ -227,9 +227,28 @@ def regex_label(text: str, known_ingredients: list[str] | None = None) -> dict:
             out["toxicity_colour"] = c
             break
     lines = [ln.strip() for ln in t.splitlines() if ln.strip()]
-    if lines:
-        out["brand"] = lines[0][:80]
+    brand = next((ln for ln in lines if _brand_like(ln, out.get("active_ingredient"))), lines[0] if lines else None)
+    if brand:
+        out["brand"] = brand[:80]
     return out
+
+
+# Lines at the top of a label that are not the brand: the company name or the product class.
+COMPANY_WORDS = {"bayer", "syngenta", "upl", "dhanuka", "fmc", "basf", "corteva", "rallis", "pi industries",
+                 "coromandel", "sumitomo", "nufarm", "adama", "iffco", "crystal", "godrej", "gharda", "indofil",
+                 "insecticides (india)", "best agrolife", "willowood", "hpm", "parijat", "tata"}
+GENERIC_LINE = re.compile(r"^(?:systemic |contact |broad[- ]spectrum )?(?:insecticide|fungicide|herbicide|weedicide|"
+                          r"pesticide|acaricide|nematicide)s?$|keep out|caution|poison|warning|net content|"
+                          r"\b(?:ltd|limited|pvt|private)\b", re.I)
+
+
+def _brand_like(line: str, ai: str | None) -> bool:
+    low = line.lower().strip(" .:-")
+    if len(low) < 3 or low in COMPANY_WORDS or GENERIC_LINE.search(low):
+        return False
+    if ai and low.startswith(ai.lower()):
+        return False  # "Imidacloprid 17.8% SL" is the chemical line, not the brand
+    return not re.match(r"^(?:reg|batch|mfg|exp|b\.?\s?no|lot|date|mrp)\b", low)
 
 
 def regex_bill(text: str) -> dict:

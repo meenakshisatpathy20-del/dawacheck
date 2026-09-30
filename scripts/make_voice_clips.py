@@ -47,6 +47,10 @@ def main() -> None:
             else:
                 subprocess.run(shlex.split(a.cmd.format(lang=lang, text=shlex.quote(text), out=out)), check=True)
             print(out.relative_to(ROOT))
+    # The app only requests clips listed here, so missing clips never cause 404s.
+    manifest = {d.name: sorted(f.stem for f in d.glob("*.mp3")) for d in OUT.iterdir() if d.is_dir()}
+    (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
+    print((OUT / "manifest.json").relative_to(ROOT))
 
 
 if __name__ == "__main__":

@@ -74,7 +74,17 @@ def health(db: Session = Depends(get_db)):
             "ocr": ocr.available(), "llm": extract.llm_enabled(), "offline": config.OFFLINE,
             "products": len(db.scalars(select(models.Product.id)).all()),
             "label_claims": len(db.scalars(select(models.LabelClaim.id)).all()),
-            "scans": scan.count_scans(db)}
+            "scans": scan.count_scans(db), "warnings": _warnings()}
+
+
+def _warnings() -> list[str]:
+    w = []
+    if config.SERVERLESS and config.DATABASE_URL.startswith("sqlite"):
+        w.append("Temporary SQLite in /tmp: scans, sprays and reports are lost between requests. "
+                 "Attach Postgres (Vercel Storage > Neon) and redeploy.")
+    if not ocr.available() and not extract.llm_enabled():
+        w.append("No server-side label reader: set ANTHROPIC_API_KEY (photos are read on the phone until then).")
+    return w
 
 
 @app.post("/scan")

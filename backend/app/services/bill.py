@@ -71,7 +71,18 @@ def check_bill(db: Session, *, image: bytes | None = None, ocr_text: str | None 
         line = {"input": it, "candidates": [{"id": c[0].id, "brand": c[0].brand, "score": round(c[1])} for c in cands],
                 "needs_confirmation": product is None or (len(cands) > 1 and cands[0][1] - cands[1][1] < 5)}
         if product is None:
-            line.update({"verdict": "grey", "message": i18n.t("verdict.grey", lang)})
+            # Brand not in the catalogue: if the line names the chemical, check it at formulation level.
+            fields, _ = extract.extract_label(name, [a.name for a in catalogue.all_ingredients(db)])
+            fields = {k: v for k, v in fields.items() if k in ("active_ingredient", "strength_pct", "formulation") and v}
+            if fields.get("active_ingredient"):
+                res = scan.scan(db, fields={**fields, "brand": name}, crop=crop, pest=pest, state=state, lang=lang,
+                                district=district, user_id=user_id, log=True)
+                line.update({"verdict": res["verdict"], "fired": res["fired"], "suggestions": res["suggestions"][:3],
+                             "formulation": res["identified"]["formulation"], "needs_confirmation": False})
+                if res["verdict"] in ("yellow", "red"):
+                    bad += 1
+            else:
+                line.update({"verdict": "grey", "message": i18n.t("bill.unlisted", lang)})
             lines.append(line)
             continue
         res = scan.scan(db, product_id=product.id, crop=crop, pest=pest, state=state, lang=lang,

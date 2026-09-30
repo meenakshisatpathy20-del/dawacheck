@@ -69,7 +69,7 @@ On stage with unreliable Wi-Fi set `DAWACHECK_OFFLINE=1`: no external calls; the
 
 ### Tests
 ```bash
-cd backend && python -m pytest -q                      # 115 tests
+cd backend && python -m pytest -q                      # 121 tests
 TEST_DATABASE_URL=postgresql+psycopg://user@host/db python -m pytest -q   # same suite on PostgreSQL + PostGIS
 ```
 Covers every rule, every endpoint, dose maths, extraction, a real Tesseract photo-OCR run, the PDF parsers, the admin flows, the job queue, the impact metrics and the 30 knowledge-base questions.
