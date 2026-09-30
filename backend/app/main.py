@@ -5,7 +5,7 @@ import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -109,6 +109,22 @@ async def post_scan_async(
               "lat": _f(lat), "lon": _f(lon), "district": district, "shop": shop, "user_id": user_id,
               "area_acre": _f(area_acre), "tank_l": _f(tank_l)}
     return jobs.submit("scan", kwargs)
+
+
+@app.post("/jobs/run")
+async def run_job(request: Request):
+    """Called by Upstash QStash (signed) to run a queued job in its own function call."""
+    body = await request.body()
+    if not jobs.verify_qstash(request.headers.get("upstash-signature"), body):
+        raise HTTPException(401, "bad signature")
+    try:
+        job_id = json.loads(body)["job_id"]
+    except Exception:
+        raise HTTPException(400, "job_id missing")
+    out = jobs.run_stored(str(job_id))
+    if out is None:
+        raise HTTPException(404, "unknown job")
+    return out
 
 
 @app.get("/jobs/{job_id}")

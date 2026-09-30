@@ -220,3 +220,15 @@ class PassportView(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     plot_id: Mapped[str] = mapped_column(String(60), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Job(Base):
+    """A queued OCR job (used by the QStash queue, where no process memory is shared)."""
+    __tablename__ = "jobs"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(20))
+    payload: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(10), default="queued")
+    result: Mapped[dict | None] = mapped_column(JSON)
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

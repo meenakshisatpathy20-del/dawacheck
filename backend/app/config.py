@@ -25,6 +25,14 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _WRITABLE / "uploads"))
 # Serverless instances do not share /tmp, so small images (field crops) are returned inline as data URLs.
 INLINE_IMAGES = os.getenv("INLINE_IMAGES", "1" if SERVERLESS else "0") == "1"
 REDIS_URL = os.getenv("REDIS_URL", "")
+# Upstash QStash: the background queue on Vercel (no worker processes there). QStash calls
+# POST {PUBLIC_URL}/api/jobs/run with a signed request; the job then runs in its own function call.
+QSTASH_URL = os.getenv("QSTASH_URL", "https://qstash.upstash.io").rstrip("/")
+QSTASH_TOKEN = os.getenv("QSTASH_TOKEN", "")
+QSTASH_CURRENT_SIGNING_KEY = os.getenv("QSTASH_CURRENT_SIGNING_KEY", "")
+QSTASH_NEXT_SIGNING_KEY = os.getenv("QSTASH_NEXT_SIGNING_KEY", "")
+_pub = os.getenv("PUBLIC_URL") or os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or ""
+PUBLIC_URL = (_pub if _pub.startswith("http") or not _pub else "https://" + _pub).rstrip("/")
 
 # S3 / MinIO for pack and bill photos. Local disk is used when S3_ENDPOINT is empty.
 S3_ENDPOINT = os.getenv("S3_ENDPOINT", "")
