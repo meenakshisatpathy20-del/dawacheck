@@ -18,7 +18,20 @@ def _db_url(url: str) -> str:
     return url
 
 
-DATABASE_URL = _db_url(os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or f"sqlite:///{_WRITABLE / 'dawacheck.db'}")
+def _find_db_env() -> str | None:
+    """DATABASE_URL / POSTGRES_URL, or the same names with the prefix Vercel Storage may add
+    (e.g. STORAGE_DATABASE_URL, NEON_POSTGRES_URL). Pooled URLs are preferred over *_UNPOOLED."""
+    for name in ("DATABASE_URL", "POSTGRES_URL"):
+        if os.getenv(name):
+            return os.getenv(name)
+    for suffix in ("_DATABASE_URL", "_POSTGRES_URL"):
+        for k, v in sorted(os.environ.items()):
+            if k.endswith(suffix) and v and v.startswith(("postgres://", "postgresql")):
+                return v
+    return None
+
+
+DATABASE_URL = _db_url(_find_db_env() or f"sqlite:///{_WRITABLE / 'dawacheck.db'}")
 BACKEND = Path(__file__).resolve().parents[1]  # backend/ (self-contained: deployable on its own)
 SEED_DIR = Path(os.getenv("SEED_DIR", BACKEND / "data" / "seed"))
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _WRITABLE / "uploads"))

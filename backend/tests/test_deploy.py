@@ -139,3 +139,10 @@ def test_weather_window_uses_field_local_time(monkeypatch):
     monkeypatch.setattr(httpx, "get", lambda *a, **k: R())
     out = weather.fetch(19.0, 73.0)
     assert out["hours"][0]["time"] == local.strftime("%H:00")
+
+
+def test_prefixed_vercel_storage_variable_is_found(monkeypatch):
+    for k in ("DATABASE_URL", "POSTGRES_URL"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("STORAGE_DATABASE_URL", "postgres://u:p@h/db?sslmode=require")
+    assert config._db_url(config._find_db_env()) == "postgresql+psycopg://u:p@h/db?sslmode=require"
